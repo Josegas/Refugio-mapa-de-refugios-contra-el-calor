@@ -1,0 +1,8 @@
+# Versions tested in the prototype (Python 3.13)
+duckdb>=2.0,<3
+rasterio>=1.5
+h3>=4.5,<5
+scipy>=1.18
+shapely>=2.2
+pyproj>=3.8
+numpy>=2.5
