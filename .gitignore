@@ -1,0 +1,36 @@
+# Raw downloads: regenerated in ~20 s per city with `python pipeline/fetch.py <city>`
+data/raw/
+
+# Secrets: the Amazon Location API key never goes into git
+.env
+*.env
+web/config.local.js
+# Generated at deploy time with the API key inside
+web/config.js
+
+# Terraform: the state file can contain secrets and is never committed.
+# (.terraform.lock.hcl IS committed: it pins the provider versions.)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+# Variable values (e.g. your alert email) stay local; commit only the *.example file
+*.tfvars
+!*.tfvars.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Node tooling (screenshots, diagrams)
+node_modules/
+
+# Deploy artifacts
+deploy/build/
+*.zip
+
+# OS
+.DS_Store
