@@ -1,4 +1,4 @@
-# Refugio — how far is the nearest cool place, on foot, in Culiacán's heat?
+# Refugio - how far is the nearest cool place, on foot, in Culiacán's heat?
 
 > Work in progress for the AWS Builder Center **Weekend Challenge: Map it** (Oct 31 – Nov 2, 2026).
 > Live app, write-up and video: coming soon.
