@@ -1,0 +1,191 @@
+{
+ "city": "Culiacán",
+ "state": "Sinaloa",
+ "id": "culiacan",
+ "generated": "2026-10-31",
+ "center": [
+  -107.394,
+  24.799
+ ],
+ "zoom": 12.2,
+ "params": {
+  "walk_speed_kmh": 3.6,
+  "thresholds_min": [
+   5,
+   10,
+   15
+  ],
+  "cover_min": 10,
+  "h3_res": 10,
+  "min_confidence": 0.5,
+  "max_snap_m": 400
+ },
+ "sources": {
+  "overture_release": "2026-10-21.0",
+  "hrsl_version": "latest"
+ },
+ "network": {
+  "nodes": 39069,
+  "edges": 57276,
+  "street_km": 4567,
+  "main_component_share": 0.993
+ },
+ "counts": {
+  "refugio": 217,
+  "alivio": 366,
+  "by_type": {
+   "departamental": 37,
+   "plaza": 68,
+   "super": 58,
+   "museo": 10,
+   "farmacia": 189,
+   "conveniencia": 177,
+   "cultura": 13,
+   "comunitario": 24,
+   "biblioteca": 7
+  },
+  "candidates": 197,
+  "hexes": 6932,
+  "hoods": 328
+ },
+ "population": {
+  "total": 723131,
+  "pop60": 55485,
+  "dropped_far_from_streets": 0
+ },
+ "access_refugio": {
+  "le5": {
+   "pop": 65066,
+   "pop60": 6687
+  },
+  "le10": {
+   "pop": 187946,
+   "pop60": 16383
+  },
+  "le15": {
+   "pop": 211323,
+   "pop60": 15377
+  },
+  "gt15": {
+   "pop": 258795,
+   "pop60": 17039
+  }
+ },
+ "access_any": {
+  "le5": {
+   "pop": 223760,
+   "pop60": 20985
+  },
+  "le10": {
+   "pop": 334776,
+   "pop60": 26165
+  },
+  "le15": {
+   "pop": 122928,
+   "pop60": 6551
+  },
+  "gt15": {
+   "pop": 41667,
+   "pop60": 1785
+  }
+ },
+ "zones": [
+  {
+   "name": "Díaz Ordaz / Libertad",
+   "lon": -107.41204,
+   "lat": 24.77809,
+   "pop60": 5856,
+   "pop": 57339,
+   "hexes": 330,
+   "median_min": 20
+  },
+  {
+   "name": "Alturas del Sur / Guadalupe Victoria",
+   "lon": -107.36516,
+   "lat": 24.77768,
+   "pop60": 3677,
+   "pop": 67903,
+   "hexes": 606,
+   "median_min": 21
+  },
+  {
+   "name": "Las Quintas / Hidalgo",
+   "lon": -107.37222,
+   "lat": 24.80954,
+   "pop60": 2628,
+   "pop": 15712,
+   "hexes": 155,
+   "median_min": 18
+  },
+  {
+   "name": "Alameda / Los Mezcales",
+   "lon": -107.39066,
+   "lat": 24.86763,
+   "pop60": 722,
+   "pop": 15897,
+   "hexes": 166,
+   "median_min": 38
+  },
+  {
+   "name": "Santa Elena / Villa Fontana",
+   "lon": -107.4222,
+   "lat": 24.83161,
+   "pop60": 708,
+   "pop": 14124,
+   "hexes": 132,
+   "median_min": 19
+  },
+  {
+   "name": "El Mirador / Jesús Valdez Aldana",
+   "lon": -107.38433,
+   "lat": 24.84892,
+   "pop60": 534,
+   "pop": 10807,
+   "hexes": 74,
+   "median_min": 21
+  },
+  {
+   "name": "Infonavit Barrancos / Balcones del Valle",
+   "lon": -107.43409,
+   "lat": 24.75426,
+   "pop60": 518,
+   "pop": 19590,
+   "hexes": 106,
+   "median_min": 22
+  },
+  {
+   "name": "San Javier / Santa Rocío",
+   "lon": -107.50369,
+   "lat": 24.77994,
+   "pop60": 282,
+   "pop": 4573,
+   "hexes": 94,
+   "median_min": 22
+  },
+  {
+   "name": "Montecarlo / Residencial del Humaya",
+   "lon": -107.42007,
+   "lat": 24.80914,
+   "pop60": 278,
+   "pop": 3104,
+   "hexes": 37,
+   "median_min": 19
+  },
+  {
+   "name": "Montebello / Colinas de San Miguel",
+   "lon": -107.38188,
+   "lat": 24.78537,
+   "pop60": 154,
+   "pop": 1643,
+   "hexes": 20,
+   "median_min": 17
+  }
+ ],
+ "proposals": {
+  "n": 10,
+  "new_pop60": 6091,
+  "new_pop": 37526,
+  "pct60_le10_before": 41.6,
+  "pct60_le10_after": 52.6
+ }
+}
