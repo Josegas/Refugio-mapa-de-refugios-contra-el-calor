@@ -1,0 +1,4 @@
+# Extra tools for the evidence script (pipeline/evidence.py): AWS SDK and charts
+-r requirements.txt
+boto3[crt]>=1.43
+matplotlib>=3.11

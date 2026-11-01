@@ -125,3 +125,20 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
 - Decidí:
   - La cifra principal ahora dice "según los datos abiertos de Overture Maps".
   - Antes de la entrega: spot-check de refugios, lista documentada de falsos positivos, y medir el hueco con SearchNearby en 50 hexágonos (solo se guarda el porcentaje).
+
+**2026-10-31 19:30 · Evidencia: validación contra Amazon Location, el hueco de Overture y limpieza de refugios**
+- Intenté: `pipeline/evidence.py`, con boto3 y el perfil `refugio`. Solo se guardan las cifras agregadas; las respuestas de Amazon Location no se guardan.
+- **Validación (50 hexágonos al azar, semilla 2026):**
+  - Diferencia mediana: **0.5 min**. P90: 1.7 min. **94% dentro de ±2 min** y 100% dentro de ±5 min. Correlación: 0.99.
+  - El mapa de datos abiertos es un poco conservador: +0.2 min de mediana.
+- **El hueco de Overture:** en el **10%** de los hexágonos (donde vive el 12% de los adultos mayores de la muestra), Amazon Location conoce un lugar tipo refugio al menos 150 m más cerca. La cifra principal se lee como un máximo.
+- **Spot-check, primer intento:**
+  - Pasó: con SearchNearby a 150 m, solo encontró 3 de 15 refugios. Lugares que sí existen salían como "no".
+  - Cómo lo supe: revisando la lista a mano. Pedía los 10 lugares más cercanos de cualquier tipo, y en zonas comerciales la plaza grande quedaba fuera; además los nombres variaban.
+  - Decidí: buscar cada lugar por su nombre (SearchText) a menos de 300 m. Resultado: **10 de 15 encontrados**, 8 de ellos con categoría compatible.
+- **Limpieza:** revisé a mano todos los nombres. Quité 6 falsos positivos claros con una lista documentada (`NOT_REFUGES`) y sus tests:
+  - una oficina de Megacable y "Maxi Tours", que venían como plazas comerciales;
+  - un temazcal y una oficina municipal, que venían como centros comunitarios;
+  - un grupo gnóstico y una escuela de idiomas, que venían como centros culturales.
+- Resultado: quedan 211 refugios. **17,441 adultos mayores (31.4%)** están a más de 15 min. Las 10 propuestas suben la cobertura de 40.7% a 51.6% (+6,085).
+- Pendiente: volver a correr las pruebas 1 y 2 sobre los datos finales antes de escribir el artículo.
