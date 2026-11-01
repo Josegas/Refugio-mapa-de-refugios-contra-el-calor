@@ -441,10 +441,12 @@ async function geocode(text) {
 }
 
 // The main flow: from one point, show the walk to the nearest refuge
-async function searchFrom(lngLat, label) {
+async function searchFrom(lngLat, label, { afterGeocode = false } = {}) {
   if (!state.hexByCell) return;
   const [lon, lat] = lngLat;
+  const geocodeTiming = afterGeocode ? timings : []; // keep the Geocode time for ?debug=1
   clearSearch();
+  timings = geocodeTiming;
   if (originMarker) originMarker.remove();
   originMarker = new maplibregl.Marker({ color: "#0b0b0b" }).setLngLat(lngLat).addTo(map);
 
@@ -598,10 +600,11 @@ document.getElementById("search-form").addEventListener("submit", async (e) => {
   if (!canUseApi() || searchCount >= MAX_SEARCHES) return showResult(`<p class="note">${canUseApi() ? t().tooMany : t().demo}</p>`);
   showResult(`<p class="muted">${t().searching}</p>`);
   searchCount++;
+  timings = []; // a new search: start timing from the Geocode call
   try {
     const found = await geocode(text);
     if (!found) return showResult(`<p>${t().notFound}</p>`);
-    await searchFrom(found.position, found.label);
+    await searchFrom(found.position, found.label, { afterGeocode: true });
   } catch (err) {
     console.warn(err);
     showResult(`<p class="note">${t().apiFailed}</p>`);

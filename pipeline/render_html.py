@@ -156,7 +156,329 @@ def meta(s):
     return (f'<meta name="description" content="{esc(desc)}">\n'
             f'  <meta property="og:title" content="Refugio - how far is the nearest cool place, on foot, in {esc(s["city"])}?">\n'
             f'  <meta property="og:description" content="{esc(desc)}">\n'
-            f'  <meta property="og:type" content="website">')
+            f'  <meta property="og:type" content="website">\n'
+            f'  <meta property="og:image" content="{SITE}/og.png">\n'  # screenshot by docs/diagrams/capture.py
+            f'  <meta property="og:image:alt" content="Map of Culiacán colored by walking minutes to the nearest cool refuge">\n'
+            f'  <meta name="twitter:card" content="summary_large_image">')
+
+
+# ----------------------------------------------------------------------------- about.html and llms.txt
+# A plain, static write-up of the project for judges, search engines and the AI scoring system.
+# English only (the judges' language). Every number comes from stats.json or docs/validation.md.
+
+SITE = "https://main.d6r3007drgrwp.amplifyapp.com"
+REPO = "https://github.com/Josegas/Refugio-mapa-de-refugios-contra-el-calor"
+ARTICLE = None  # Builder Center article URL: fill in once it's published, then re-run this script
+VIDEO = None    # public video URL: same
+
+HEAT_FACTS = [  # (fact, source URL) - CLAUDE.md section 14
+    ("Sinaloa ranked first in Mexico for heat-related illness cases in epidemiological week 32 of 2026 "
+     "(20 cases, Mexico's Health Ministry).",
+     "https://www.yucatan.com.mx/merida/2026/08/20/otro-caso-de-golpe-de-calor-en-yucatan-en-mexico-hay-4-nuevas-defunciones.html"),
+    ("Mexico recorded at least 121 deaths from extreme temperatures between March and August 2026.",
+     "https://www.unotv.com/clima/muertes-calor-mexico-2026/"),
+    ("Culiacán reaches 45 °C in summer.",
+     "https://www.luznoticias.mx/2026-07-10/sinaloa/como-sobrevivir-a-un-golpe-de-calor-en-culiacan-la-capital-de-sinaloa-registra-hasta-45-c-/296549"),
+    ("About 31% of Culiacán's city buses had no air conditioning in 2024.",
+     "https://www.luznoticias.mx/2024-07-13/sinaloa/culiacan-estas-son-las-rutas-donde-hay-menos-camiones-con-aire-acondicionado/211490"),
+]
+
+
+def zone_label_en(z):
+    if z["name"]:
+        return esc(z["name"])
+    return f"{DIRECTIONS[z['dir']][1]} area, {z['km']} km from downtown"
+
+
+def validation_metrics():
+    """The aggregate numbers in docs/validation.md (written by evidence.py), keyed by their row label."""
+    text = (ROOT / "docs" / "validation.md").read_text()
+    rows = {}
+    for line in text.splitlines():
+        m = re.match(r"^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|$", line)  # two-column table rows only
+        if m:
+            rows[m.group(1)] = m.group(2).replace("**", "")
+    rows["sample"] = re.search(r"(\d+) random hexagons", text).group(1)
+    needed = ["Median absolute difference", "90th percentile of the absolute difference", "Within ±2 min",
+              "Within ±5 min", "Correlation", "Found by Amazon Location within 300 m",
+              "...and with a compatible category",
+              "Hexagons where Amazon Location knows a refuge-type place clearly closer",
+              "Share of the sampled older adults living in those hexagons"]
+    missing = [k for k in needed if k not in rows]
+    if missing:
+        raise SystemExit(f"docs/validation.md is missing rows: {missing}")
+    return rows
+
+
+def table(head, rows, cls=""):
+    th = "".join(f"<th scope=\"col\">{h}</th>" for h in head)
+    body = "".join("<tr>" + "".join(f"<td>{c}</td>" for c in r) + "</tr>" for r in rows)
+    return f'<table{f" class={cls!r}" if cls else ""}><thead><tr>{th}</tr></thead><tbody>{body}</tbody></table>'
+
+
+def links_html():
+    items = [f'<a href="./">Live map</a>', f'<a href="{REPO}">Source code (MIT)</a>']
+    if ARTICLE:
+        items.append(f'<a href="{ARTICLE}">Article on AWS Builder Center</a>')
+    if VIDEO:
+        items.append(f'<a href="{VIDEO}">Video demo</a>')
+    return " · ".join(items)
+
+
+def about_page(cities, v):
+    """cities: list of stats dicts, Culiacán first. v: validation metrics."""
+    c0 = cities[0]
+    far0 = c0["access_refugio"]["gt15"]["pop60"]
+    tot0 = c0["population"]["pop60"]
+    p0 = c0["proposals"]
+    desc = (f"{num(far0)} older adults in Culiacán, Mexico ({pct(far0, tot0)}) live more than a 15-minute walk "
+            f"from the nearest cool refuge. How the Refugio map was built from open data on AWS and Amazon "
+            f"Location Service, with results for Culiacán, Hermosillo and Mexicali.")
+    out = [f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About Refugio: walking time to a cool place for older adults in 45 °C heat</title>
+  <meta name="description" content="{esc(desc)}">
+  <meta property="og:title" content="About Refugio: walking time to a cool place in 45 °C heat">
+  <meta property="og:description" content="{esc(desc)}">
+  <meta property="og:type" content="article">
+  <meta property="og:image" content="{SITE}/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="about.css">
+</head>
+<body>
+<!-- Generated by pipeline/render_html.py from web/data/*/stats.json and docs/validation.md. Do not edit by hand. -->
+<main class="doc">
+<p class="links">{links_html()}</p>
+<h1>Refugio: how far do older adults have to walk in 45 °C heat to reach a cool place?</h1>
+<p class="lede">In Culiacán, Mexico, <strong>{num(far0)} older adults (60+), {pct(far0, tot0)} of the
+{num(tot0)} who live in the city, are more than a 15-minute walk from the nearest air-conditioned place
+where they can stay without buying anything</strong>, according to Overture Maps open data. Refugio maps
+that walking time for every block-sized hexagon, shows where cool refuges are missing, ranks the
+existing public buildings that could open as refuges, and gives anyone a live walking route from
+their own address with Amazon Location Service.</p>
+
+<h2>Key figures</h2>
+"""]
+    rows = []
+    for s in cities:
+        t60 = s["population"]["pop60"]
+        far = s["access_refugio"]["gt15"]["pop60"]
+        far_any = s["access_any"]["gt15"]["pop60"]
+        p = s["proposals"]
+        rows.append([f'{esc(s["city"])}, {esc(s["state"])}', num(t60), f"{num(far)} ({pct(far, t60)})",
+                     f"{num(far_any)} ({pct(far_any, t60)})",
+                     f'{p["pct60_le10_before"]}% → {p["pct60_le10_after"]}%'])
+    out.append(table(["City", "Older adults (60+)", "More than 15 min on foot from a refuge",
+                      "...counting pharmacies and convenience stores too",
+                      f"Within 10 min of a refuge: today → with {p0['n']} proposed public buildings"], rows))
+    out.append(f"""<p class="note">Walking speed 3.6 km/h, along the real street network. Older adults are
+people aged 60 or more in the Meta/CIESIN High Resolution Settlement Layer. A refuge is a mall, department
+store, large supermarket, library, museum, cultural or community center (air conditioning assumed from the
+type of place).</p>
+
+<h2>The problem</h2>
+<ul>
+{"".join(f'<li>{esc(f)} <a href="{u}">Source</a>.</li>' for f, u in HEAT_FACTS)}
+</ul>
+<p>An older adult without a car walks to wherever they can cool down. A radius on a map says nothing about
+how far that is on foot: rivers, highways and dead-end streets make the real walk longer. Refugio
+measures the walk along the streets and counts who lives at each distance.</p>
+
+<h2>What you can explore on the map</h2>
+<ul>
+<li><b>Walking-time hexagons.</b> Each H3 hexagon (about 1.5 ha) is colored by the minutes on foot to the
+nearest refuge, in 5 bands: ≤5, 5–10, 10–15, 15–20 and more than 20 minutes. Lighter is closer.</li>
+<li><b>Refuges only, or refuges plus quick stops.</b> A switch adds pharmacies and convenience stores, where
+you can step in for a moment and buy water.</li>
+<li><b>Where older adults live.</b> A filter hides hexagons with fewer than 10 older adults.</li>
+<li><b>Where refuges are missing.</b> The areas with the most older adults more than 15 minutes away; tap one
+to fly there.</li>
+<li><b>Proposed refuges.</b> The {p0["n"]} existing public buildings that would bring the most older adults within
+a 10-minute walk, numbered on the map.</li>
+<li><b>From your home.</b> Type an address, tap the map or use your location. Amazon Location draws the area
+you can reach on foot in 5, 10 and 15 minutes, the walking route to the nearest refuge, and the cool places
+it knows nearby. Three example buttons start a search in the areas with the biggest gaps.</li>
+<li><b>Three cities.</b> Culiacán (Sinaloa), Hermosillo (Sonora) and Mexicali (Baja California), built with
+the same pipeline.</li>
+</ul>
+
+<h2>The data</h2>
+""")
+    out.append(table(["Dataset", "What it gives", "Version", "License"], [
+        ['<a href="https://registry.opendata.aws/overture/">Overture Maps</a> places',
+         "Points of interest with category, brand and confidence: the refuges, quick stops and candidate public buildings",
+         f'Release {esc(c0["sources"]["overture_release"])}', "CDLA Permissive 2.0, Apache 2.0, CC0 (by source)"],
+        ["Overture Maps transportation (segments)", "Streets and their connectors: the walking network",
+         f'Release {esc(c0["sources"]["overture_release"])}', "ODbL, © OpenStreetMap contributors"],
+        ["Overture Maps divisions", "City limits (Culiacán) and municipality and neighborhood names",
+         f'Release {esc(c0["sources"]["overture_release"])}', "ODbL, © OpenStreetMap contributors"],
+        ['<a href="https://registry.opendata.aws/dataforgood-fb-hrsl/">Meta HRSL</a> general and elderly 60+',
+         "Total population and people aged 60+ at about 30 m resolution", "Latest (Cloud-Optimized GeoTIFF)",
+         "CC BY 4.0, Meta and CIESIN – Columbia University"],
+    ]))
+    out.append("""<p>Both datasets are on the <a href="https://registry.opendata.aws/">Registry of Open Data on AWS</a>,
+in Amazon S3. Only each city's bounding box is read, with HTTP range requests, so a city downloads in about
+40 seconds instead of pulling global files.</p>
+
+<h2>How it's put on the map</h2>
+<ol>
+<li><b>Read from S3.</b> DuckDB queries the Overture GeoParquet files by bounding box; rasterio reads only the
+needed window of the HRSL Cloud-Optimized GeoTIFFs.</li>
+<li><b>Classify places.</b> Overture categories plus brand names decide what is a refuge, a quick stop, a
+candidate public building or nothing. A documented exclusion list removes clear mistakes (banks labeled
+as malls, a prison labeled as a government office).</li>
+<li><b>Walking network.</b> Road segments are split at their connectors into a graph; motorways are left out.</li>
+<li><b>Population on H3.</b> HRSL pixels are summed into H3 resolution-10 hexagons inside the study area.</li>
+<li><b>Walking minutes.</b> One multi-source Dijkstra run gives every hexagon the walk to the nearest refuge
+door, at 3.6 km/h, a conservative speed for an older adult in the heat.</li>
+<li><b>Proposals.</b> A greedy maximum-coverage algorithm picks, one at a time, the existing public building
+(public schools, district offices, community and sports centers) that brings the most older adults
+within 10 minutes.</li>
+<li><b>Web.</b> The results are small static files (hexagons, refuges, proposals and statistics) drawn in the
+browser with MapLibre GL JS and h3-js on an Amazon Location base map, and hosted on AWS Amplify.</li>
+</ol>
+<h3>Pipeline volumes, per city</h3>
+""")
+    vrows = []
+    for s in cities:
+        q, n = s["pipeline"], s["network"]
+        cls = q["places_classified"]
+        vrows.append([esc(s["city"]),
+                      f'{num(q["places_read"])} → {num(cls["refugio"])} refuges, {num(cls["alivio"])} quick stops, '
+                      f'{num(cls["candidates"])} candidates',
+                      f'{num(q["segments_read"])} → {num(n["nodes"])} nodes, {num(n["edges"])} edges ({num(n["street_km"])} km)',
+                      f'{num(q["populated_pixels"])} populated pixels → {num(s["counts"]["hexes"])} hexagons',
+                      f'{num(cls["candidates"])} → {s["proposals"]["n"]}',
+                      f'{q["fetch_seconds"]["total"]} s + {q["build_seconds"]} s' if q["fetch_seconds"] else f'{q["build_seconds"]} s'])
+    out.append(table(["City", "Places read → classified", "Street segments → walking network",
+                      "Population → hexagons", "Candidates → proposals", "Download + compute time"], vrows))
+    out.append("""<p class="note">Times measured on a laptop on a home connection: the download reads from Amazon S3,
+the compute step runs locally.</p>
+
+<h2>AWS services</h2>
+""")
+    out.append(table(["Service", "Used for", "Why"], [
+        ["Registry of Open Data on AWS (Amazon S3)", "Overture Maps and Meta HRSL, read by bounding box",
+         "Open, global data in cloud-native formats: the same code works for any Mexican city."],
+        ["Amazon Location Service: Maps", "Base map (vector style, API key)", "No tile server to run."],
+        ["Amazon Location Service: Places", "Geocode (address search) and SearchNearby (cool places near you)",
+         "Up-to-date commercial places that complement Overture. Used as SingleUse: results are never stored."],
+        ["Amazon Location Service: Routes", "CalculateIsolines (5/10/15-minute walk) and CalculateRoutes (walking route)",
+         "Pedestrian routing from the exact address, which can't be precomputed for every home."],
+        ["AWS Amplify Hosting", "Static site with CDN and HTTPS", "Deployed by GitHub Actions with OIDC, no stored keys."],
+        ["AWS Budgets", "Cost alerts", "Warns by email if the public API key is abused."],
+    ]))
+    out.append(f"""<p>The infrastructure (API keys restricted to this domain, Amplify app, budget and the GitHub deploy
+role) is defined in Terraform. Every push to main runs the tests, a secret scan and Terraform checks before
+deploying, and an uptime check runs every 3 hours.</p>
+
+<h2>Evidence: is the open-data map right?</h2>
+<p>For {v["sample"]} random hexagons where older adults live in Culiacán, Amazon Location <code>CalculateRoutes</code>
+(Pedestrian, 3.6 km/h) walked from the hexagon to the refuge the map says is nearest:</p>
+""")
+    out.append(table(["Metric", "Value"], [
+        ["Median absolute difference", esc(v["Median absolute difference"])],
+        ["90th percentile of the difference", esc(v["90th percentile of the absolute difference"])],
+        ["Within ±2 minutes", esc(v["Within ±2 min"])],
+        ["Within ±5 minutes", esc(v["Within ±5 min"])],
+        ["Correlation", esc(v["Correlation"])],
+    ]))
+    out.append(f"""<p><b>What Overture is missing.</b> In {esc(v["Hexagons where Amazon Location knows a refuge-type place clearly closer"])}
+of those hexagons (home to {esc(v["Share of the sampled older adults living in those hexagons"])} of the sampled older adults),
+Amazon Location <code>SearchNearby</code> knows a refuge-type place at least 150 m closer. The headline figure is
+best read as an upper bound.</p>
+<p><b>Spot-check.</b> Of 15 random refuges, Amazon Location found {esc(v["Found by Amazon Location within 300 m"])} by
+name within 300 m, {esc(v["...and with a compatible category"])} with a compatible category.</p>
+<p>Only these aggregate numbers were kept; the Amazon Location responses were not stored.</p>
+
+<h2>Where refuges are missing</h2>
+""")
+    for s in cities:
+        out.append(f'<h3>{esc(s["city"])}</h3>')
+        out.append(table(["Area", "Older adults more than 15 min away", "Median walk"],
+                         [[zone_label_en(z), num(z["pop60"]), f'{z["median_min"]} min'] for z in s["zones"][:5]]))
+    out.append(f"<h2>{p0['n']} public buildings that could open as refuges in Culiacán</h2>")
+    prows = []
+    for f in json.loads((WEB / "data" / c0["id"] / "proposals.geojson").read_text())["features"]:
+        q = f["properties"]
+        prows.append([q["rank"], esc(q["name"]), TYPE.get(q["type"], ("", q["type"]))[1], f'+{num(q["new_pop60"])}'])
+    out.append(table(["#", "Building", "Type", "Older adults newly within 10 min"], prows))
+    out.append(f"""<p class="note">With these {p0["n"]}, older adults within a 10-minute walk of a refuge go from
+{p0["pct60_le10_before"]}% to {p0["pct60_le10_after"]}% (+{num(p0["new_pop60"])} people). "Public" is inferred
+from the building's name, not from an official registry.</p>
+
+<h2>Limitations</h2>
+<ul>
+<li>Air conditioning and free entry are assumed from the type of place, not checked one by one.</li>
+<li>Overture doesn't list every place (it has few convenience stores), so real access is probably better than shown.</li>
+<li>The age of the census behind the HRSL 60+ layer is not documented on the registry page.</li>
+<li>Shade, sidewalks, safety and opening hours are not modeled: malls close at night, and the heat peaks from 2 to 5 pm.</li>
+<li>The map doesn't know who has a car. The walking speed is an assumption; Amazon Location isolines use the
+service's default pedestrian speed, which can't be set.</li>
+<li>The natural next step is an official refuge network validated with the city.</li>
+</ul>
+
+<h2>Privacy</h2>
+<p>No accounts, cookies or analytics. Addresses are never stored, and your location is only requested if
+you press the button.</p>
+
+<h2>Sources and licenses</h2>
+<ul>
+<li>Overture Maps Foundation, release {esc(c0["sources"]["overture_release"])}: transportation and divisions (ODbL,
+© OpenStreetMap contributors); places (Meta and Microsoft, CDLA Permissive 2.0; Foursquare, Apache 2.0;
+AllThePlaces, CC0).</li>
+<li>Meta and CIESIN – Columbia University, High Resolution Settlement Layer (CC BY 4.0).</li>
+<li>Base map: Amazon Location Service.</li>
+<li>Code: MIT. Derived data in <code>web/data/</code>: ODbL. <a href="{REPO}">{REPO.replace("https://", "")}</a></li>
+</ul>
+<p class="links">{links_html()}</p>
+</main>
+</body>
+</html>
+""")
+    return "\n".join(out)
+
+
+def llms_txt(cities, v):
+    """The same summary in plain text (https://llmstxt.org), for AI systems that read the site."""
+    c0 = cities[0]
+    lines = ["# Refugio", "",
+             "> A walking-time map of cool refuges for older adults in 45 °C heat, in Culiacán, Hermosillo "
+             "and Mexicali (Mexico). Built from open data on AWS (Overture Maps, Meta HRSL) and Amazon "
+             "Location Service. Code: MIT.", "", "## Key figures", ""]
+    for s in cities:
+        t60, far, p = s["population"]["pop60"], s["access_refugio"]["gt15"]["pop60"], s["proposals"]
+        lines.append(f"- {s['city']}: {num(far)} of {num(t60)} older adults (60+), {pct(far, t60)}, live more than "
+                     f"a 15-minute walk from the nearest refuge. {p['n']} proposed public buildings would raise "
+                     f"those within 10 minutes from {p['pct60_le10_before']}% to {p['pct60_le10_after']}%.")
+    lines += ["", "## Evidence", "",
+              f"- Against Amazon Location CalculateRoutes in {v['sample']} random Culiacán hexagons: median "
+              f"difference {v['Median absolute difference']}, {v['Within ±2 min']} within ±2 minutes, "
+              f"correlation {v['Correlation']}.",
+              f"- Amazon Location knows a refuge-type place clearly closer in "
+              f"{v['Hexagons where Amazon Location knows a refuge-type place clearly closer']} of those hexagons, "
+              f"so the headline figure is an upper bound.",
+              "", "## Method", "",
+              "- Overture places, streets and boundaries read by bounding box from Amazon S3 with DuckDB; "
+              "HRSL population (total and 60+) from Cloud-Optimized GeoTIFFs with rasterio.",
+              "- Walking network from Overture road segments, multi-source Dijkstra at 3.6 km/h, results on "
+              "H3 resolution-10 hexagons.",
+              "- Greedy maximum coverage over existing public buildings to propose new refuges.",
+              "- Live layer: Amazon Location Geocode, SearchNearby, CalculateIsolines and CalculateRoutes "
+              "from the user's address (results not stored).",
+              "", "## Links", "",
+              f"- [Live map]({SITE}/): the interactive map (Spanish by default, English button)",
+              f"- [About]({SITE}/about.html): full write-up with tables",
+              f"- [Source code]({REPO})"]
+    if ARTICLE:
+        lines.append(f"- [Article on AWS Builder Center]({ARTICLE})")
+    if VIDEO:
+        lines.append(f"- [Video demo]({VIDEO})")
+    return "\n".join(lines) + "\n"
 
 
 def replace_between(text, name, new):
@@ -182,6 +504,15 @@ def main():
     text = replace_between(text, "panel", panel(default))
     index.write_text(text)
     print(f"updated {index.relative_to(ROOT)} with {DEFAULT_CITY}")
+
+    # about.html and llms.txt: all cities, default city first
+    order = [c["id"] for c in cities]
+    order.sort(key=lambda cid: cid != DEFAULT_CITY)
+    all_stats = [json.loads((WEB / "data" / cid / "stats.json").read_text()) for cid in order]
+    v = validation_metrics()
+    (WEB / "about.html").write_text(about_page(all_stats, v))
+    (WEB / "llms.txt").write_text(llms_txt(all_stats, v))
+    print("wrote web/about.html and web/llms.txt")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,27 @@
+# Refugio
+
+> A walking-time map of cool refuges for older adults in 45 °C heat, in Culiacán, Hermosillo and Mexicali (Mexico). Built from open data on AWS (Overture Maps, Meta HRSL) and Amazon Location Service. Code: MIT.
+
+## Key figures
+
+- Culiacán: 17,441 of 55,485 older adults (60+), 31.4%, live more than a 15-minute walk from the nearest refuge. 10 proposed public buildings would raise those within 10 minutes from 40.7% to 51.6%.
+- Hermosillo: 18,859 of 63,621 older adults (60+), 29.6%, live more than a 15-minute walk from the nearest refuge. 10 proposed public buildings would raise those within 10 minutes from 41.2% to 51.5%.
+- Mexicali: 16,242 of 61,403 older adults (60+), 26.5%, live more than a 15-minute walk from the nearest refuge. 10 proposed public buildings would raise those within 10 minutes from 44.1% to 51.9%.
+
+## Evidence
+
+- Against Amazon Location CalculateRoutes in 50 random Culiacán hexagons: median difference 0.5 min, 94% within ±2 minutes, correlation 0.99.
+- Amazon Location knows a refuge-type place clearly closer in 10% of those hexagons, so the headline figure is an upper bound.
+
+## Method
+
+- Overture places, streets and boundaries read by bounding box from Amazon S3 with DuckDB; HRSL population (total and 60+) from Cloud-Optimized GeoTIFFs with rasterio.
+- Walking network from Overture road segments, multi-source Dijkstra at 3.6 km/h, results on H3 resolution-10 hexagons.
+- Greedy maximum coverage over existing public buildings to propose new refuges.
+- Live layer: Amazon Location Geocode, SearchNearby, CalculateIsolines and CalculateRoutes from the user's address (results not stored).
+
+## Links
+
+- [Live map](https://main.d6r3007drgrwp.amplifyapp.com/): the interactive map (Spanish by default, English button)
+- [About](https://main.d6r3007drgrwp.amplifyapp.com/about.html): full write-up with tables
+- [Source code](https://github.com/Josegas/Refugio-mapa-de-refugios-contra-el-calor)
