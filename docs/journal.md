@@ -142,3 +142,33 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
   - un grupo gnóstico y una escuela de idiomas, que venían como centros culturales.
 - Resultado: quedan 211 refugios. **17,441 adultos mayores (31.4%)** están a más de 15 min. Las 10 propuestas suben la cobertura de 40.7% a 51.6% (+6,085).
 - Pendiente: volver a correr las pruebas 1 y 2 sobre los datos finales antes de escribir el artículo.
+
+**2026-10-31 19:45 · Monitoreo de disponibilidad**
+- Hice: `.github/workflows/uptime.yml`. Cada 3 horas revisa tres cosas: que la página muestre la cifra sin JavaScript, que carguen los datos del mapa y que la API key funcione desde el dominio. Pide el descriptor de estilo, que es una llamada que no se cobra.
+- Pasó:
+  - actionlint marcó la línea 3, pero el error real estaba en la línea 1: `name Uptime`, sin los dos puntos.
+  - Había un typo en la URL de respaldo (`dr63` en lugar de `d6r3`) que ningún linter podía ver. La prueba manual habría salido verde, porque usaba otra copia de la URL, y las corridas automáticas habrían mandado una falsa alarma cada 3 horas.
+- Decidí: la URL vive en un solo lugar. La alerta se probó a propósito con una URL que no existe: el run salió rojo con 404 y llegó el correo.
+
+**2026-10-31 20:30 · Hermosillo y Mexicali**
+- Intenté: correr el mismo pipeline en las dos ciudades (§6.3).
+- Pasó: Overture no tiene polígono `locality` para ninguna de las dos; solo municipios completos (16,978 km² y 11,611 km², casi todo desierto). Además, en el área de Mexicali el único `locality` es Calexico, del lado de EE.UU.
+- Cómo lo supe: consultando `division_area` por subtipo dentro del bbox.
+- Decidí:
+  - **Área de estudio = mancha urbana sacada de la población.** Es el grupo contiguo más grande de celdas H3 (res 9) con al menos 300 hab/km², el umbral de "urban cluster" del método *Degree of Urbanisation* (UE/OCDE/ONU), recortado al municipio, sin huecos.
+  - Las calles y los lugares también se recortan al municipio, para que Mexicali no rutee por Calexico.
+  - Las zonas sin colonia en Overture se nombran por dirección y distancia al centro.
+- Verifiqué:
+  - Culiacán no cambia (prueba de regresión); su área de 138.1 km² coincide con la del plan.
+  - Ninguna mancha urbana toca el borde del bbox.
+  - En Mexicali hay 0 hexágonos al norte de la frontera.
+  - Las propuestas son escuelas públicas por nombre. "Ecos Preescolar y Primaria" (Mexicali) podría ser privada: hay que verificarla.
+- Resultados:
+
+  | Ciudad | Área | Adultos 60+ a más de 15 min | Cobertura ≤10 min con 10 propuestas |
+  |---|---|---|---|
+  | Hermosillo | 148 km² | 18,859 (29.6%) | 41.2% → 51.5% |
+  | Mexicali | 178 km² | 16,242 (26.5%) | 44.1% → 51.9% |
+
+  Cada ciudad tarda ~35 s en descargarse y ~3 s en calcularse. Pasan 45 tests: los de datos corren para las 3 ciudades.
+- Bug encontrado al probar: un link con `?city=` cargaba el mapa de esa ciudad pero dejaba el panel de Culiacán. Corregido.
