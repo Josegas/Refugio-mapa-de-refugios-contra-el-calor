@@ -55,6 +55,8 @@ const TEXT = {
     locating: "Pidiendo tu ubicación…",
     noLocation: "No se pudo obtener tu ubicación.",
     clear: "Limpiar",
+    placeholder: (city) => `Calle y colonia, ${city}`,
+    zoneDir: (dir, km) => `Zona ${{ N: "norte", NE: "noreste", E: "este", SE: "sureste", S: "sur", SW: "suroeste", W: "oeste", NW: "noroeste" }[dir]} (${km} km)`,
     nearbyCats: { shopping_mall: "Plaza", department_store: "Departamental", grocery: "Súper", library: "Biblioteca",
                   museum: "Museo", "civic-community_center": "Centro comunitario", pharmacy: "Farmacia",
                   drugstore: "Farmacia", drugstore_or_pharmacy: "Farmacia", convenience_store: "Conveniencia" },
@@ -90,6 +92,8 @@ const TEXT = {
     locating: "Asking for your location…",
     noLocation: "Your location could not be obtained.",
     clear: "Clear",
+    placeholder: (city) => `Street and neighborhood, ${city}`,
+    zoneDir: (dir, km) => `${{ N: "North", NE: "Northeast", E: "East", SE: "Southeast", S: "South", SW: "Southwest", W: "West", NW: "Northwest" }[dir]} area (${km} km)`,
     nearbyCats: { shopping_mall: "Mall", department_store: "Department store", grocery: "Grocery", library: "Library",
                   museum: "Museum", "civic-community_center": "Community center", pharmacy: "Pharmacy",
                   drugstore: "Pharmacy", drugstore_or_pharmacy: "Pharmacy", convenience_store: "Convenience" },
@@ -106,6 +110,8 @@ function setLanguage(lang) {
   document.documentElement.lang = lang; // CSS hides the other language's <span lang>
   document.getElementById("lang-toggle").textContent = t().langButton;
   if (usingDemo) showNotice(t().demo);
+  updatePlaceholder();
+  if (state.stats) renderExamples(state.stats.zones.slice(0, 3));
   updateUrl({ lang: lang === "en" ? "en" : null });
 }
 
@@ -203,6 +209,7 @@ async function addDataLayers() {
   const col = data.hex.fields.indexOf("h");
   state.hexByCell = new Map(data.hex.rows.map((row, i) => [row[col], hexes.features[i].properties]));
   renderExamples(data.stats.zones.slice(0, 3));
+  updatePlaceholder();
 
   // Put the hexagons under the base map's labels, so street names stay readable
   const firstLabel = map.getStyle().layers.find((l) => l.type === "symbol")?.id;
@@ -355,11 +362,18 @@ fetch("data/cities.json").then((r) => r.json()).then((cities) => {
   select.addEventListener("change", () => switchCity(select.value));
 }).catch(() => {});
 
+// The panel text of a city (written by render_html.py). index.html already contains Culiacán's.
+async function loadPanel(city) {
+  const html = await fetch(`data/${city}/panel.html`).then((r) => r.text());
+  document.getElementById("city-panel").innerHTML = html;
+  applyFilters(); // show the stacked bar that matches the current mode
+}
+if (state.city !== "culiacan") loadPanel(state.city); // opened with a ?city= link
+
 async function switchCity(city) {
   state.city = city;
   updateUrl({ city: city === "culiacan" ? null : city });
-  const html = await fetch(`data/${city}/panel.html`).then((r) => r.text());
-  document.getElementById("city-panel").innerHTML = html; // text made by render_html.py
+  await loadPanel(city);
   cityData = loadCity(city);
   clearSearch();
   if (originMarker) originMarker.remove();
@@ -605,7 +619,7 @@ document.getElementById("locate").addEventListener("click", () => {
 
 function renderExamples(zones) {
   document.getElementById("examples").innerHTML = zones.map((z) =>
-    `<button type="button" class="chip" data-lon="${z.lon}" data-lat="${z.lat}">${escapeHtml((z.name || "").split(" / ")[0])}</button>`).join("");
+    `<button type="button" class="chip" data-lon="${z.lon}" data-lat="${z.lat}">${escapeHtml(z.name ? z.name.split(" / ")[0] : t().zoneDir(z.dir, z.km))}</button>`).join("");
 }
 document.getElementById("examples").addEventListener("click", (e) => {
   const b = e.target.closest("button[data-lon]");
@@ -619,6 +633,11 @@ document.getElementById("search-result").addEventListener("click", (e) => {
 });
 
 // ---------------------------------------------------------------- 7. Helpers
+
+// The address box hint names the current city, in the current language
+function updatePlaceholder() {
+  if (state.stats) document.getElementById("address").placeholder = t().placeholder(state.stats.city);
+}
 
 function showNotice(text) {
   const el = document.getElementById("notice");

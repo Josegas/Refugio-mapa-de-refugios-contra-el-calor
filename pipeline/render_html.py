@@ -31,6 +31,19 @@ TYPE = {  # proposal types
 }
 
 
+DIRECTIONS = {"N": ("norte", "North"), "NE": ("noreste", "Northeast"), "E": ("este", "East"),
+              "SE": ("sureste", "Southeast"), "S": ("sur", "South"), "SW": ("suroeste", "Southwest"),
+              "W": ("oeste", "West"), "NW": ("noroeste", "Northwest")}
+
+
+def zone_label(z):
+    """Neighborhood names when Overture has them; otherwise direction and distance from downtown."""
+    if z["name"]:
+        return esc(z["name"])
+    es, en = DIRECTIONS[z["dir"]]
+    return both(f"Zona {es} · a {z['km']} km del centro", f"{en} area · {z['km']} km from downtown")
+
+
 def esc(s):
     return html.escape(str(s), quote=True)
 
@@ -102,7 +115,7 @@ def panel(s):
                       "Areas with the most older adults more than 15 min away. Tap one to see it.")
                + "</p><ol>")
     for z in s["zones"][:5]:
-        name = esc(z["name"]) if z["name"] else both("Zona sin nombre", "Unnamed area")
+        name = zone_label(z)
         out.append(f'<li><button type="button" class="fly" data-lon="{z["lon"]}" data-lat="{z["lat"]}" data-zoom="14.5">'
                    f'<span class="name">{name}</span><span class="meta">'
                    + both(f'{num(z["pop60"])} adultos mayores · mediana {z["median_min"]} min',

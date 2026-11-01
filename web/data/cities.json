@@ -8,5 +8,25 @@
    24.799
   ],
   "zoom": 12.2
+ },
+ {
+  "id": "hermosillo",
+  "city": "Hermosillo",
+  "state": "Sonora",
+  "center": [
+   -110.961,
+   29.073
+  ],
+  "zoom": 11.8
+ },
+ {
+  "id": "mexicali",
+  "city": "Mexicali",
+  "state": "Baja California",
+  "center": [
+   -115.455,
+   32.615
+  ],
+  "zoom": 11.6
  }
 ]

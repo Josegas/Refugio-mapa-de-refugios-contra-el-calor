@@ -27,9 +27,10 @@ from pyproj import Geod
 from scipy.sparse import coo_matrix, csr_matrix
 from scipy.sparse.csgraph import connected_components, dijkstra
 from scipy.spatial import cKDTree
+import shapely
 from shapely import wkb as swkb
-from shapely.geometry import Point
-from shapely.ops import linemerge
+from shapely.geometry import Point, Polygon, shape
+from shapely.ops import linemerge, unary_union
 from shapely.prepared import prep
 from shapely.strtree import STRtree
 
@@ -148,11 +149,11 @@ def dedupe(items, radius_m=40):
     return kept
 
 
-def load_places(city_id, locality_poly):
+def load_places(city_id, places_area):
     rows = duckdb.sql(f"SELECT name, cat, confidence, operating_status, lon, lat "
                       f"FROM '{RAW / city_id / 'places.parquet'}'").fetchall()
     refuges, candidates = [], []
-    lp = prep(locality_poly.buffer(0.01))  # ~1 km margin around the city edge
+    lp = prep(places_area)  # the study area plus ~1 km, so refuges just outside the edge count
     for name, cat, conf, status, lon, lat in rows:
         if conf is None or conf < MIN_CONFIDENCE or status == "closed" or not lp.contains(Point(lon, lat)):
             continue
@@ -167,7 +168,9 @@ def load_places(city_id, locality_poly):
 
 # ----------------------------------------------------------------------------- network
 
-def build_graph(city_id):
+def build_graph(city_id, clip=None):
+    """Walking network. `clip`: keep only streets touching this polygon (Mexicali: not across the border)."""
+    keep = prep(clip) if clip is not None else None
     segs = duckdb.sql(f"SELECT class, connectors, wkb FROM '{RAW / city_id / 'segments.parquet'}'").fetchall()
     node_of, coords, edges = {}, [], {}
     street_m = 0.0
@@ -175,6 +178,8 @@ def build_graph(city_id):
         if cls == "motorway" or not conns:
             continue
         line = swkb.loads(bytes(wkbb))
+        if keep is not None and not keep.intersects(line):
+            continue
         if line.geom_type == "MultiLineString":
             line = linemerge(line)
             if line.geom_type != "LineString":
@@ -247,18 +252,63 @@ def load_hexes(city_id, locality_poly):
 
 # ----------------------------------------------------------------------------- neighborhoods
 
-def load_divisions(city_id, locality_name):
+URBAN_DENSITY = 300  # people per km2: "urban cluster" threshold of the Degree of Urbanisation (EU/OECD/UN)
+
+
+def load_divisions(city_id, city):
+    """Study area, neighborhoods and municipality (county) polygons for a city.
+
+    Study area: the Overture `locality` polygon when it exists (Culiacán). Hermosillo and Mexicali have
+    none in Overture, so their study area is derived from population (see urban_footprint)."""
     rows = duckdb.sql(f"SELECT subtype, name, wkb FROM '{RAW / city_id / 'divisions.parquet'}'").fetchall()
-    locality, hoods = None, []
+    locality, county, hoods = None, None, []
     for st, name, g in rows:
         geom = swkb.loads(bytes(g))
-        if st == "locality" and name == locality_name:
+        if st == "locality" and name == city.get("locality"):
             locality = geom if locality is None or geom.area > locality.area else locality
+        elif st == "county" and name == city.get("county"):
+            county = geom
         elif st in ("neighborhood", "microhood", "macrohood") and name:
             hoods.append((name, geom))
-    if locality is None:
-        raise SystemExit(f"Locality polygon '{locality_name}' not found; check cities.py")
-    return locality, hoods
+    if locality is None and county is None:
+        raise SystemExit(f"Neither locality nor county polygon found for {city_id}; check cities.py")
+    area = locality if locality is not None else urban_footprint(city_id, county)
+    return area, hoods, county
+
+
+def urban_footprint(city_id, county):
+    """Largest contiguous cluster of H3 cells (res 9, ~0.1 km2) with >= URBAN_DENSITY people per km2,
+    inside the municipality (so, for Mexicali, Calexico on the US side stays out). Holes are filled,
+    so parks and industrial areas inside the city still count as city."""
+    meta = json.loads((RAW / city_id / "raster_meta.json").read_text())
+    pop = np.load(RAW / city_id / "pop.npy")
+    a, b, c, d, e, f = meta["pop"]["transform"]
+    rr, cc = np.nonzero(pop > 0)
+    lon = c + a * (cc + 0.5) + b * (rr + 0.5)
+    lat = f + d * (cc + 0.5) + e * (rr + 0.5)
+    inside = shapely.contains_xy(county, lon, lat)
+    sums = defaultdict(float)
+    for i in np.nonzero(inside)[0]:
+        sums[h3.latlng_to_cell(lat[i], lon[i], 9)] += float(pop[rr[i], cc[i]])
+    dense = {cell for cell, p in sums.items() if p / h3.cell_area(cell, "km^2") >= URBAN_DENSITY}
+    seen, best = set(), []
+    for start in dense:  # connected components over neighboring cells
+        if start in seen:
+            continue
+        comp, stack = [], [start]
+        seen.add(start)
+        while stack:
+            cell = stack.pop()
+            comp.append(cell)
+            for nb in h3.grid_disk(cell, 1):
+                if nb in dense and nb not in seen:
+                    seen.add(nb)
+                    stack.append(nb)
+        best = comp if len(comp) > len(best) else best
+    footprint = shape(h3.h3shape_to_geo(h3.cells_to_h3shape(best)))
+    polys = footprint.geoms if footprint.geom_type == "MultiPolygon" else [footprint]
+    filled = unary_union([Polygon(p.exterior) for p in polys])
+    return filled.intersection(county)
 
 
 def name_points(points, hoods, max_deg=0.003):
@@ -299,11 +349,14 @@ def band_stats(minutes, pop, pop60, thresholds=THRESHOLDS_MIN):
 def build(city_id):
     city = CITIES[city_id]
     print(f"[{city_id}] boundaries")
-    locality, hoods = load_divisions(city_id, city["locality"])
+    area, hoods, county = load_divisions(city_id, city)
+    places_area = area.buffer(0.01)  # ~1 km margin around the city edge
+    if county is not None:
+        places_area = places_area.intersection(county)  # never across the municipal (or national) border
     print(f"[{city_id}] places")
-    refuges, candidates = load_places(city_id, locality)
+    refuges, candidates = load_places(city_id, places_area)
     print(f"[{city_id}] network")
-    G, coords, in_main, gstats = build_graph(city_id)
+    G, coords, in_main, gstats = build_graph(city_id, clip=county)
     lon0, lat0 = city["center"]
     proj = Projector(lon0, lat0)
     main_idx = np.nonzero(in_main)[0]
@@ -314,7 +367,7 @@ def build(city_id):
         return d, main_idx[i]
 
     print(f"[{city_id}] population")
-    hexes = load_hexes(city_id, locality)
+    hexes = load_hexes(city_id, area)
     hd, hn = snap(hexes)
     keep = hd <= MAX_SNAP_M
     dropped_pop = sum(h["pop"] for h, k in zip(hexes, keep) if not k)
@@ -424,7 +477,11 @@ def build(city_id):
         if not names:
             nm = name_points([(lon, lat)], hoods, max_deg=0.01)[0]
             names = Counter([nm] if nm else [])
+        # Direction and distance from downtown: a readable label when no neighborhood name is known
+        az, _, dist = GEOD.inv(lon0, lat0, lon, lat)
         zones.append({"name": " / ".join(n for n, _ in names.most_common(2)) or None,
+                      "dir": ["N", "NE", "E", "SE", "S", "SW", "W", "NW"][round((az % 360) / 45) % 8],
+                      "km": round(dist / 1000, 1),
                       "lon": round(lon, 5), "lat": round(lat, 5), "pop60": round(p60),
                       "pop": round(float(pop[comp].sum())), "hexes": len(comp),
                       "median_min": round(float(np.median(m_ref[comp])))})
@@ -454,6 +511,9 @@ def build(city_id):
                    "h3_res": H3_RES, "min_confidence": MIN_CONFIDENCE, "max_snap_m": MAX_SNAP_M},
         "sources": {"overture_release": OVERTURE_RELEASE, "hrsl_version": HRSL_VERSION},
         "network": gstats,
+        "study_area": {"method": "overture_locality" if city.get("locality") else "urban_footprint",
+                       "density_threshold_per_km2": None if city.get("locality") else URBAN_DENSITY,
+                       "km2": round(abs(GEOD.geometry_area_perimeter(area)[0]) / 1e6, 1)},
         "counts": {"refugio": int((tiers == "refugio").sum()), "alivio": int((tiers == "alivio").sum()),
                    "by_type": dict(Counter(r["type"] for r in refuges)), "candidates": len(candidates),
                    "hexes": len(hexes), "hoods": len(hoods)},

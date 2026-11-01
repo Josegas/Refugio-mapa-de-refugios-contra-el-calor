@@ -1,0 +1,281 @@
+{
+ "city": "Hermosillo",
+ "state": "Sonora",
+ "id": "hermosillo",
+ "generated": "2026-10-31",
+ "center": [
+  -110.961,
+  29.073
+ ],
+ "zoom": 11.8,
+ "params": {
+  "walk_speed_kmh": 3.6,
+  "thresholds_min": [
+   5,
+   10,
+   15
+  ],
+  "cover_min": 10,
+  "h3_res": 10,
+  "min_confidence": 0.5,
+  "max_snap_m": 400
+ },
+ "sources": {
+  "overture_release": "2026-10-21.0",
+  "hrsl_version": "latest"
+ },
+ "network": {
+  "nodes": 48330,
+  "edges": 67950,
+  "street_km": 5350,
+  "main_component_share": 0.989
+ },
+ "study_area": {
+  "method": "urban_footprint",
+  "density_threshold_per_km2": 300,
+  "km2": 148.0
+ },
+ "counts": {
+  "refugio": 218,
+  "alivio": 455,
+  "by_type": {
+   "departamental": 34,
+   "conveniencia": 226,
+   "plaza": 100,
+   "farmacia": 229,
+   "super": 34,
+   "museo": 6,
+   "biblioteca": 18,
+   "comunitario": 16,
+   "cultura": 10
+  },
+  "candidates": 243,
+  "hexes": 7478,
+  "hoods": 10
+ },
+ "population": {
+  "total": 813591,
+  "pop60": 63621,
+  "dropped_far_from_streets": 0
+ },
+ "access_refugio": {
+  "le5": {
+   "pop": 66954,
+   "pop60": 7205
+  },
+  "le10": {
+   "pop": 201670,
+   "pop60": 19024
+  },
+  "le15": {
+   "pop": 212363,
+   "pop60": 18532
+  },
+  "gt15": {
+   "pop": 332604,
+   "pop60": 18859
+  }
+ },
+ "access_any": {
+  "le5": {
+   "pop": 244662,
+   "pop60": 23665
+  },
+  "le10": {
+   "pop": 387921,
+   "pop60": 30407
+  },
+  "le15": {
+   "pop": 138524,
+   "pop60": 7641
+  },
+  "gt15": {
+   "pop": 42485,
+   "pop60": 1908
+  }
+ },
+ "map_bands": {
+  "thresholds_min": [
+   5,
+   10,
+   15,
+   20
+  ],
+  "refugio": {
+   "le5": {
+    "pop": 66954,
+    "pop60": 7205
+   },
+   "le10": {
+    "pop": 201670,
+    "pop60": 19024
+   },
+   "le15": {
+    "pop": 212363,
+    "pop60": 18532
+   },
+   "le20": {
+    "pop": 141489,
+    "pop60": 10695
+   },
+   "gt20": {
+    "pop": 191114,
+    "pop60": 8164
+   }
+  },
+  "any": {
+   "le5": {
+    "pop": 244662,
+    "pop60": 23665
+   },
+   "le10": {
+    "pop": 387921,
+    "pop60": 30407
+   },
+   "le15": {
+    "pop": 138524,
+    "pop60": 7641
+   },
+   "le20": {
+    "pop": 33808,
+    "pop60": 1524
+   },
+   "gt20": {
+    "pop": 8676,
+    "pop60": 384
+   }
+  }
+ },
+ "zones": [
+  {
+   "name": "Solidaridad / Villa del Real",
+   "dir": "N",
+   "km": 7.2,
+   "lon": -110.98909,
+   "lat": 29.1333,
+   "pop60": 6199,
+   "pop": 120256,
+   "hexes": 744,
+   "median_min": 26
+  },
+  {
+   "name": "Buena Vista Sección Amanecer",
+   "dir": "SW",
+   "km": 2.9,
+   "lon": -110.98741,
+   "lat": 29.06172,
+   "pop60": 4612,
+   "pop": 75746,
+   "hexes": 1049,
+   "median_min": 21
+  },
+  {
+   "name": null,
+   "dir": "N",
+   "km": 4.0,
+   "lon": -110.97442,
+   "lat": 29.10682,
+   "pop60": 2168,
+   "pop": 9556,
+   "hexes": 84,
+   "median_min": 17
+  },
+  {
+   "name": null,
+   "dir": "NE",
+   "km": 3.4,
+   "lon": -110.92905,
+   "lat": 29.08471,
+   "pop60": 1837,
+   "pop": 14913,
+   "hexes": 162,
+   "median_min": 23
+  },
+  {
+   "name": null,
+   "dir": "S",
+   "km": 8.2,
+   "lon": -110.93347,
+   "lat": 29.00356,
+   "pop60": 824,
+   "pop": 28664,
+   "hexes": 201,
+   "median_min": 26
+  },
+  {
+   "name": null,
+   "dir": "NE",
+   "km": 4.3,
+   "lon": -110.9421,
+   "lat": 29.10796,
+   "pop60": 642,
+   "pop": 4244,
+   "hexes": 89,
+   "median_min": 20
+  },
+  {
+   "name": null,
+   "dir": "S",
+   "km": 3.0,
+   "lon": -110.95358,
+   "lat": 29.04696,
+   "pop60": 414,
+   "pop": 2739,
+   "hexes": 43,
+   "median_min": 20
+  },
+  {
+   "name": null,
+   "dir": "NE",
+   "km": 5.6,
+   "lon": -110.91833,
+   "lat": 29.10751,
+   "pop60": 317,
+   "pop": 4651,
+   "hexes": 82,
+   "median_min": 29
+  },
+  {
+   "name": null,
+   "dir": "NW",
+   "km": 8.9,
+   "lon": -111.04292,
+   "lat": 29.10837,
+   "pop60": 260,
+   "pop": 16734,
+   "hexes": 116,
+   "median_min": 28
+  },
+  {
+   "name": null,
+   "dir": "SE",
+   "km": 3.4,
+   "lon": -110.93947,
+   "lat": 29.04838,
+   "pop60": 198,
+   "pop": 12515,
+   "hexes": 93,
+   "median_min": 28
+  }
+ ],
+ "proposals": {
+  "n": 10,
+  "new_pop60": 6518,
+  "new_pop": 45206,
+  "pct60_le10_before": 41.2,
+  "pct60_le10_after": 51.5,
+  "coverage_curve_pct60": [
+   41.2,
+   42.7,
+   44.1,
+   45.3,
+   46.6,
+   47.5,
+   48.4,
+   49.2,
+   50.0,
+   50.7,
+   51.5
+  ]
+ }
+}

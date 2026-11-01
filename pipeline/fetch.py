@@ -67,7 +67,7 @@ def fetch(city_id):
         SELECT id, subtype, names.primary AS name, ST_AsWKB(geometry) AS wkb
         FROM read_parquet('{OVERTURE}/theme=divisions/type=division_area/*', hive_partitioning=1)
         WHERE bbox.xmin < {xmax} AND bbox.xmax > {xmin} AND bbox.ymin < {ymax} AND bbox.ymax > {ymin}
-          AND subtype IN ('locality', 'neighborhood', 'microhood', 'macrohood')
+          AND subtype IN ('county', 'locality', 'neighborhood', 'microhood', 'macrohood')
         ) TO '{out}/divisions.parquet'""")
 
     print(f"[{city_id}] population rasters…")

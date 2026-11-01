@@ -1,5 +1,7 @@
-"""City configuration. Add a city by giving it a bounding box and the name of its
-Overture `locality` polygon (used as the urban study area)."""
+"""City configuration. Add a city by giving it a bounding box and either:
+  - "locality": the name of its Overture `locality` polygon (used as the urban study area), or
+  - "county": the name of its municipality polygon, when Overture has no locality for the city. The
+    study area is then the city's urban footprint, derived from population (build.urban_footprint)."""
 
 OVERTURE_RELEASE = "2026-10-21.0"
 HRSL_VERSION = "latest"  # Meta High Resolution Population Density Maps (Registry of Open Data on AWS)
@@ -17,7 +19,7 @@ CITIES = {
         "name": "Hermosillo",
         "state": "Sonora",
         "bbox": (-111.12, 28.95, -110.85, 29.20),
-        "locality": "Hermosillo",
+        "county": "Hermosillo",
         "center": (-110.961, 29.073),
         "zoom": 11.8,
     },
@@ -25,7 +27,7 @@ CITIES = {
         "name": "Mexicali",
         "state": "Baja California",
         "bbox": (-115.62, 32.50, -115.25, 32.68),
-        "locality": "Mexicali",
+        "county": "Municipio de Mexicali",
         "center": (-115.455, 32.615),
         "zoom": 11.6,
     },

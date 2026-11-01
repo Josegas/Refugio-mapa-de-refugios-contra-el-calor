@@ -30,6 +30,11 @@
   "street_km": 4567,
   "main_component_share": 0.993
  },
+ "study_area": {
+  "method": "overture_locality",
+  "density_threshold_per_km2": null,
+  "km2": 138.1
+ },
  "counts": {
   "refugio": 211,
   "alivio": 366,
@@ -144,6 +149,8 @@
  "zones": [
   {
    "name": "Díaz Ordaz / Libertad",
+   "dir": "SW",
+   "km": 3.0,
    "lon": -107.41186,
    "lat": 24.77792,
    "pop60": 6006,
@@ -153,6 +160,8 @@
   },
   {
    "name": "Alturas del Sur / Guadalupe Victoria",
+   "dir": "SE",
+   "km": 3.8,
    "lon": -107.36516,
    "lat": 24.77768,
    "pop60": 3677,
@@ -162,6 +171,8 @@
   },
   {
    "name": "Las Quintas / Hidalgo",
+   "dir": "NE",
+   "km": 2.4,
    "lon": -107.37282,
    "lat": 24.80855,
    "pop60": 2896,
@@ -171,6 +182,8 @@
   },
   {
    "name": "Alameda / Los Mezcales",
+   "dir": "N",
+   "km": 7.6,
    "lon": -107.39066,
    "lat": 24.86763,
    "pop60": 722,
@@ -180,6 +193,8 @@
   },
   {
    "name": "Santa Elena / Villa Fontana",
+   "dir": "NW",
+   "km": 4.6,
    "lon": -107.4222,
    "lat": 24.83161,
    "pop60": 708,
@@ -189,6 +204,8 @@
   },
   {
    "name": "El Mirador / Jesús Valdez Aldana",
+   "dir": "N",
+   "km": 5.6,
    "lon": -107.38433,
    "lat": 24.84892,
    "pop60": 534,
@@ -198,6 +215,8 @@
   },
   {
    "name": "Infonavit Barrancos / Balcones del Valle",
+   "dir": "SW",
+   "km": 6.4,
    "lon": -107.43409,
    "lat": 24.75426,
    "pop60": 518,
@@ -207,6 +226,8 @@
   },
   {
    "name": "San Javier / Santa Rocío",
+   "dir": "W",
+   "km": 11.3,
    "lon": -107.50369,
    "lat": 24.77994,
    "pop60": 282,
@@ -216,6 +237,8 @@
   },
   {
    "name": "Montecarlo / Residencial del Humaya",
+   "dir": "NW",
+   "km": 2.9,
    "lon": -107.42007,
    "lat": 24.80914,
    "pop60": 278,
@@ -225,6 +248,8 @@
   },
   {
    "name": "Montebello / Colinas de San Miguel",
+   "dir": "SE",
+   "km": 1.9,
    "lon": -107.38188,
    "lat": 24.78537,
    "pop60": 154,

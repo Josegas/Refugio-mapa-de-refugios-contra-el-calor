@@ -1,0 +1,281 @@
+{
+ "city": "Mexicali",
+ "state": "Baja California",
+ "id": "mexicali",
+ "generated": "2026-10-31",
+ "center": [
+  -115.455,
+  32.615
+ ],
+ "zoom": 11.6,
+ "params": {
+  "walk_speed_kmh": 3.6,
+  "thresholds_min": [
+   5,
+   10,
+   15
+  ],
+  "cover_min": 10,
+  "h3_res": 10,
+  "min_confidence": 0.5,
+  "max_snap_m": 400
+ },
+ "sources": {
+  "overture_release": "2026-10-21.0",
+  "hrsl_version": "latest"
+ },
+ "network": {
+  "nodes": 41840,
+  "edges": 61805,
+  "street_km": 5800,
+  "main_component_share": 0.998
+ },
+ "study_area": {
+  "method": "urban_footprint",
+  "density_threshold_per_km2": 300,
+  "km2": 178.0
+ },
+ "counts": {
+  "refugio": 259,
+  "alivio": 666,
+  "by_type": {
+   "conveniencia": 319,
+   "departamental": 30,
+   "farmacia": 347,
+   "super": 47,
+   "plaza": 105,
+   "museo": 13,
+   "biblioteca": 17,
+   "cultura": 17,
+   "comunitario": 30
+  },
+  "candidates": 337,
+  "hexes": 9504,
+  "hoods": 4
+ },
+ "population": {
+  "total": 780760,
+  "pop60": 61403,
+  "dropped_far_from_streets": 0
+ },
+ "access_refugio": {
+  "le5": {
+   "pop": 74019,
+   "pop60": 7199
+  },
+  "le10": {
+   "pop": 218669,
+   "pop60": 19864
+  },
+  "le15": {
+   "pop": 214635,
+   "pop60": 18099
+  },
+  "gt15": {
+   "pop": 273436,
+   "pop60": 16242
+  }
+ },
+ "access_any": {
+  "le5": {
+   "pop": 268848,
+   "pop60": 23179
+  },
+  "le10": {
+   "pop": 365070,
+   "pop60": 29467
+  },
+  "le15": {
+   "pop": 109458,
+   "pop60": 6956
+  },
+  "gt15": {
+   "pop": 37383,
+   "pop60": 1801
+  }
+ },
+ "map_bands": {
+  "thresholds_min": [
+   5,
+   10,
+   15,
+   20
+  ],
+  "refugio": {
+   "le5": {
+    "pop": 74019,
+    "pop60": 7199
+   },
+   "le10": {
+    "pop": 218669,
+    "pop60": 19864
+   },
+   "le15": {
+    "pop": 214635,
+    "pop60": 18099
+   },
+   "le20": {
+    "pop": 132161,
+    "pop60": 10050
+   },
+   "gt20": {
+    "pop": 141275,
+    "pop60": 6191
+   }
+  },
+  "any": {
+   "le5": {
+    "pop": 268848,
+    "pop60": 23179
+   },
+   "le10": {
+    "pop": 365070,
+    "pop60": 29467
+   },
+   "le15": {
+    "pop": 109458,
+    "pop60": 6956
+   },
+   "le20": {
+    "pop": 27388,
+    "pop60": 1358
+   },
+   "gt20": {
+    "pop": 9995,
+    "pop60": 444
+   }
+  }
+ },
+ "zones": [
+  {
+   "name": null,
+   "dir": "E",
+   "km": 3.0,
+   "lon": -115.42489,
+   "lat": 32.60704,
+   "pop60": 3511,
+   "pop": 50626,
+   "hexes": 747,
+   "median_min": 22
+  },
+  {
+   "name": null,
+   "dir": "SW",
+   "km": 3.9,
+   "lon": -115.49135,
+   "lat": 32.59798,
+   "pop60": 1481,
+   "pop": 53613,
+   "hexes": 556,
+   "median_min": 25
+  },
+  {
+   "name": "Los Alamos International Center",
+   "dir": "NE",
+   "km": 7.5,
+   "lon": -115.39806,
+   "lat": 32.66284,
+   "pop60": 1419,
+   "pop": 13912,
+   "hexes": 240,
+   "median_min": 23
+  },
+  {
+   "name": null,
+   "dir": "NW",
+   "km": 5.3,
+   "lon": -115.50685,
+   "lat": 32.63452,
+   "pop60": 1203,
+   "pop": 8578,
+   "hexes": 109,
+   "median_min": 19
+  },
+  {
+   "name": null,
+   "dir": "E",
+   "km": 8.8,
+   "lon": -115.36429,
+   "lat": 32.59505,
+   "pop60": 823,
+   "pop": 26760,
+   "hexes": 408,
+   "median_min": 23
+  },
+  {
+   "name": null,
+   "dir": "NW",
+   "km": 7.6,
+   "lon": -115.51773,
+   "lat": 32.65858,
+   "pop60": 810,
+   "pop": 5381,
+   "hexes": 45,
+   "median_min": 18
+  },
+  {
+   "name": null,
+   "dir": "NE",
+   "km": 4.7,
+   "lon": -115.4237,
+   "lat": 32.64758,
+   "pop60": 688,
+   "pop": 4590,
+   "hexes": 41,
+   "median_min": 17
+  },
+  {
+   "name": null,
+   "dir": "NW",
+   "km": 1.4,
+   "lon": -115.46897,
+   "lat": 32.62032,
+   "pop60": 607,
+   "pop": 3848,
+   "hexes": 44,
+   "median_min": 17
+  },
+  {
+   "name": null,
+   "dir": "N",
+   "km": 3.5,
+   "lon": -115.44171,
+   "lat": 32.64447,
+   "pop60": 597,
+   "pop": 3204,
+   "hexes": 36,
+   "median_min": 16
+  },
+  {
+   "name": null,
+   "dir": "NW",
+   "km": 9.1,
+   "lon": -115.54155,
+   "lat": 32.65148,
+   "pop60": 548,
+   "pop": 14571,
+   "hexes": 230,
+   "median_min": 27
+  }
+ ],
+ "proposals": {
+  "n": 10,
+  "new_pop60": 4817,
+  "new_pop": 28068,
+  "pct60_le10_before": 44.1,
+  "pct60_le10_after": 51.9,
+  "coverage_curve_pct60": [
+   44.1,
+   45.1,
+   46.1,
+   47.0,
+   47.9,
+   48.7,
+   49.4,
+   50.1,
+   50.7,
+   51.3,
+   51.9
+  ]
+ }
+}
