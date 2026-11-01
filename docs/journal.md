@@ -187,3 +187,11 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
   - Latencias (mediana de 5 búsquedas en vivo): Geocode 122 ms, SearchNearby 160 ms, CalculateRoutes 342 ms y CalculateIsolines 366 ms. Una búsqueda completa tarda **486 ms**. Las mediciones del 31 oct fueron más lentas (~1 s); eran las primeras llamadas.
 - **Dirección de la demo:** "Colonia Libertad, Culiacán". Está en la zona con más adultos mayores lejos de un refugio, el refugio más cercano es el Museo de Ciencias (público, sin marca) y la ruta de Amazon Location y el mapa de datos abiertos coinciden: **26 min**. La isolínea de 15 min no alcanza el museo.
 - Costo de esta sesión: ~100 llamadas de validación más ~50 de capturas, dentro de la capa gratuita.
+
+**2026-11-01 01:10 · Factor de rodeo, README, borrador del artículo y guion del video**
+- **Factor de rodeo en `stats.json`:** el test de la red ya lo calculaba, pero no lo guardaba. Ahora `build.py` lo escribe con el mismo método (semilla 42, pares de 0.5 a 5 km): Culiacán 1.24 (p5 1.09, p95 1.71), Hermosillo 1.27 y Mexicali 1.27. Es la evidencia de la decisión "red de calles en lugar de radios".
+- Ojo: `build_seconds` cambia un poco en cada corrida (ahora 2.1 s en Culiacán, porque incluye ese cálculo). El artículo y K2 usan el valor actual; si se vuelve a correr `build.py`, hay que regenerar K1/K2 y revisar el artículo.
+- **`about.html`** ahora muestra el diagrama de arquitectura (K1) y la gráfica de validación (K8). `render_html.py` los copia a `web/img/`. Sirven para el segmento "cómo funciona" del video, que no puede mostrar GitHub.
+- **README en inglés:** refleja el artículo, con dos diagramas Mermaid (arquitectura y secuencia de una búsqueda). Los dibujé con mermaid 11 antes de subirlos para comprobar que no salen rotos en GitHub.
+- **`docs/writeup.md`:** borrador del artículo con las 12 secciones de CLAUDE.md §9.1 (el "Try it in 1 minute" va como caja al inicio), ~2,000 palabras de texto más tablas. Quedan `TODO(José)` para tu historia, "What I learned" y el link del video.
+- **`docs/video-script.md` y `docs/video-subtitles.en.srt`:** guion de 2:55 con narración en español, qué mostrar en cada segmento y la checklist de las reglas (URL visible, sin marcas, sin otras apps, sin música).
