@@ -74,6 +74,12 @@ EXCLUDE = re.compile(r"bancoppel|afore|zona de comida|5\.11|amway|panteon|cement
 
 # Candidates for NEW refuges must be existing PUBLIC buildings: a public-policy proposal can't rely on
 # private or religious property (see docs/journal.md, 2026-10-31 14:29). Temples are not candidates.
+# Manual curation: places Overture labels as malls, community or cultural centers that clearly are not
+# refuges. Found reviewing every refuge name by hand and with the Amazon Location spot-check
+# (docs/journal.md, 2026-10-31 19:30). Only clear cases; doubtful ones stay.
+NOT_REFUGES = re.compile(r"maxi tours|megacable|temazcal|gnostico|centro cultural de idiomas|"
+                         r"evolucion patrimonial")
+
 CANDIDATE_CATS = {
     "school": "escuela", "public_school": "escuela", "elementary_school": "escuela",
     "middle_school": "escuela", "high_school": "escuela", "preschool": "escuela",
@@ -114,7 +120,7 @@ def candidate_type(name, cat):
 
 def classify(name, cat):
     n = norm(name)
-    if not n or EXCLUDE.search(n):
+    if not n or EXCLUDE.search(n) or NOT_REFUGES.search(n):
         return None
     if cat in SUPER_CATS and SUPERMARKET.search(n):
         return ("refugio", "super")

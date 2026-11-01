@@ -21,6 +21,14 @@ from build import candidate_type, classify
     ("Panteón Civil San Juan", "community_center", None),
     # A random grocery store that is not a big supermarket brand is not a refuge
     ("Abarrotes Doña Mary", "grocery_store", None),
+    # Manual curation (journal 19:30): businesses and groups mislabeled as malls or centers
+    ("Maxi Tours", "shopping_mall", None),
+    ("Megacable Universitarios", "shopping_mall", None),
+    ("Temazcal Colibrí Culiacán", "community_center", None),
+    ("Movimiento Gnóstico Culiacán", "cultural_center", None),
+    # ...but real malls and cultural centers stay
+    ("Plaza Fiesta Culiacán", "shopping_mall", ("refugio", "plaza")),
+    ("Casa de la Cultura Miguel Tamayo", "cultural_center", ("refugio", "cultura")),
 ])
 def test_classify(name, cat, expected):
     assert classify(name, cat) == expected
