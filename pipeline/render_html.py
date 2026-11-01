@@ -242,6 +242,20 @@ def links_html():
     return " · ".join(items)
 
 
+def census_html(cities):
+    """HRSL vs the 2020 census (written into stats.json by pipeline/census.py)."""
+    if not all("census" in s for s in cities):
+        return ""
+    rows = [[esc(s["city"]), f'{s["census"]["share60_census_pct"]}%', f'{s["census"]["share60_hrsl_pct"]}%',
+             f'{num(s["access_refugio"]["gt15"]["pop60"])} → about {num(s["census"]["gt15_pop60_if_census_share"])}']
+            for s in cities]
+    return ("<p><b>How many older adults? HRSL vs the 2020 census.</b> INEGI's census (ITER 2020) counts a larger "
+            "share of people aged 60+ in each city than HRSL does in our study area. If HRSL misses older adults "
+            "evenly, the shares on the map hold, but the counts are low:</p>"
+            + table(["City", "Aged 60+, census 2020 (city)", "Aged 60+, HRSL", "Older adults more than 15 min away: "
+                     "HRSL → with the census share"], rows))
+
+
 def about_page(cities, v):
     """cities: list of stats dicts, Culiacán first. v: validation metrics."""
     c0 = cities[0]
@@ -293,7 +307,8 @@ their own address with Amazon Location Service.</p>
                       "...counting pharmacies and convenience stores too",
                       f"Within 10 min of a refuge: today → with {p0['n']} proposed public buildings"], rows))
     out.append(f"""<p class="note">Walking speed 3.6 km/h, along the real street network. Older adults are
-people aged 60 or more in the Meta/CIESIN High Resolution Settlement Layer. A refuge is a mall, department
+people aged 60 or more in the Meta/CIESIN High Resolution Settlement Layer, which counts about 30% fewer of them
+than Mexico's 2020 census (see the evidence below). A refuge is a mall, department
 store, large supermarket, library, museum, cultural or community center (air conditioning assumed from the
 type of place).</p>
 
@@ -414,11 +429,12 @@ deploying, and an uptime check runs every 3 hours.</p>
                                                      "Location minutes. The shaded band is ±2 minutes."))
     out.append(f"""<p><b>What Overture is missing.</b> In {esc(v["Hexagons where Amazon Location knows a refuge-type place clearly closer"])}
 of those hexagons (home to {esc(v["Share of the sampled older adults living in those hexagons"])} of the sampled older adults),
-Amazon Location <code>SearchNearby</code> knows a refuge-type place at least 150 m closer. The headline figure is
-best read as an upper bound.</p>
+Amazon Location <code>SearchNearby</code> knows a refuge-type place at least 150 m closer. So the share of older
+adults far from a refuge is probably somewhat lower than shown.</p>
 <p><b>Spot-check.</b> Of 15 random refuges, Amazon Location found {esc(v["Found by Amazon Location within 300 m"])} by
 name within 300 m, {esc(v["...and with a compatible category"])} with a compatible category.</p>
 <p>Only these aggregate numbers were kept; the Amazon Location responses were not stored.</p>
+{census_html(cities)}
 
 <h2>Where refuges are missing</h2>
 """)
@@ -440,7 +456,9 @@ from the building's name, not from an official registry.</p>
 <ul>
 <li>Air conditioning and free entry are assumed from the type of place, not checked one by one.</li>
 <li>Overture doesn't list every place (it has few convenience stores), so real access is probably better than shown.</li>
-<li>The age of the census behind the HRSL 60+ layer is not documented on the registry page.</li>
+<li>HRSL counts about 30% fewer people aged 60+ than Mexico's 2020 census ({c0["census"]["share60_hrsl_pct"]}% vs
+{c0["census"]["share60_census_pct"]}% in Culiacán), so the counts of older adults are probably low; the shares are not
+affected if the gap is even across the city. See the evidence above.</li>
 <li>Shade, sidewalks, safety and opening hours are not modeled: malls close at night, and the heat peaks from 2 to 5 pm.</li>
 <li>The map doesn't know who has a car. The walking speed is an assumption; Amazon Location isolines use the
 service's default pedestrian speed, which can't be set.</li>
@@ -486,7 +504,11 @@ def llms_txt(cities, v):
               f"correlation {v['Correlation']}.",
               f"- Amazon Location knows a refuge-type place clearly closer in "
               f"{v['Hexagons where Amazon Location knows a refuge-type place clearly closer']} of those hexagons, "
-              f"so the headline figure is an upper bound.",
+              f"so the share of older adults far from a refuge is probably somewhat lower than shown.",
+              f"- HRSL counts about 30% fewer people aged 60+ than INEGI's 2020 census ({c0['census']['share60_hrsl_pct']}% vs "
+              f"{c0['census']['share60_census_pct']}% in Culiacán), so the counts of older adults are probably low: with the "
+              f"census share, Culiacán's {num(c0['access_refugio']['gt15']['pop60'])} would be about "
+              f"{num(c0['census']['gt15_pop60_if_census_share'])}.",
               "", "## Method", "",
               "- Overture places, streets and boundaries read by bounding box from Amazon S3 with DuckDB; "
               "HRSL population (total and 60+) from Cloud-Optimized GeoTIFFs with rasterio.",

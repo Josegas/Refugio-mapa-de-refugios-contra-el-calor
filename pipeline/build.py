@@ -104,6 +104,11 @@ PUBLIC_OTHER = re.compile(r"\b(sindicatura|centros? comunitarios?|centro de desa
                           r"casa de la cultura|unidad deportiva|polideportivo|isde|ayuntamiento|"
                           r"presidencia municipal)\b|\bdelegacion (norte|sur|oriente|poniente)\b|"
                           r"\bdelegacion .*gobierno de culiacan")
+# Manual curation of proposals: schools whose public status could not be confirmed and whose names look
+# private (a brand-like name for a combined preschool + primary; the name of a teaching method used by
+# private schools). Better to drop a public school by mistake than to propose a private one as "public"
+# (docs/journal.md, 2026-11-01). Only clear cases.
+NOT_CANDIDATES = re.compile(r"ovidio decroly|\becos preescolar")
 MIN_CONFIDENCE = 0.5
 
 
@@ -111,7 +116,7 @@ def candidate_type(name, cat):
     """Return the candidate type ('escuela', 'social', ...) if this place can be proposed as a new
     public refuge, else None."""
     n = norm(name)
-    if not n or cat not in CANDIDATE_CATS or EXCLUDE.search(n) or PRIVATE.search(n):
+    if not n or cat not in CANDIDATE_CATS or EXCLUDE.search(n) or PRIVATE.search(n) or NOT_CANDIDATES.search(n):
         return None
     kind = CANDIDATE_CATS[cat]
     public = PUBLIC_SCHOOL if kind == "escuela" else PUBLIC_OTHER

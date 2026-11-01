@@ -55,7 +55,7 @@
    "comunitario": 22,
    "biblioteca": 7
   },
-  "candidates": 197,
+  "candidates": 196,
   "hexes": 6932,
   "hoods": 328
  },
@@ -266,10 +266,10 @@
  ],
  "proposals": {
   "n": 10,
-  "new_pop60": 6085,
-  "new_pop": 37794,
+  "new_pop60": 5959,
+  "new_pop": 38139,
   "pct60_le10_before": 40.7,
-  "pct60_le10_after": 51.6,
+  "pct60_le10_after": 51.4,
   "coverage_curve_pct60": [
    40.7,
    42.0,
@@ -277,11 +277,11 @@
    44.5,
    45.7,
    46.9,
-   48.1,
-   49.1,
-   50.0,
-   50.8,
-   51.6
+   47.9,
+   48.9,
+   49.8,
+   50.6,
+   51.4
   ]
  },
  "pipeline": {
@@ -299,8 +299,19 @@
   "places_classified": {
    "refugio": 211,
    "alivio": 366,
-   "candidates": 197
+   "candidates": 196
   },
   "build_seconds": 2.1
+ },
+ "census": {
+  "source": "INEGI, Censo de Población y Vivienda 2020, ITER",
+  "locality": "Culiacán Rosales",
+  "pobtot": 808416,
+  "p_60ymas": 87853,
+  "share60_census_pct": 10.9,
+  "share60_census_municipality_pct": 11.1,
+  "share60_hrsl_pct": 7.7,
+  "ratio": 1.42,
+  "gt15_pop60_if_census_share": 24700.0
  }
 }

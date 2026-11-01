@@ -4,14 +4,15 @@
 
 ## Key figures
 
-- Culiacán: 17,441 of 55,485 older adults (60+), 31.4%, live more than a 15-minute walk from the nearest refuge. 10 proposed public buildings would raise those within 10 minutes from 40.7% to 51.6%.
+- Culiacán: 17,441 of 55,485 older adults (60+), 31.4%, live more than a 15-minute walk from the nearest refuge. 10 proposed public buildings would raise those within 10 minutes from 40.7% to 51.4%.
 - Hermosillo: 18,859 of 63,621 older adults (60+), 29.6%, live more than a 15-minute walk from the nearest refuge. 10 proposed public buildings would raise those within 10 minutes from 41.2% to 51.5%.
 - Mexicali: 16,242 of 61,403 older adults (60+), 26.5%, live more than a 15-minute walk from the nearest refuge. 10 proposed public buildings would raise those within 10 minutes from 44.1% to 51.9%.
 
 ## Evidence
 
 - Against Amazon Location CalculateRoutes in 50 random Culiacán hexagons: median difference 0.5 min, 94% within ±2 minutes, correlation 0.99.
-- Amazon Location knows a refuge-type place clearly closer in 10% of those hexagons, so the headline figure is an upper bound.
+- Amazon Location knows a refuge-type place clearly closer in 10% of those hexagons, so the share of older adults far from a refuge is probably somewhat lower than shown.
+- HRSL counts about 30% fewer people aged 60+ than INEGI's 2020 census (7.7% vs 10.9% in Culiacán), so the counts of older adults are probably low: with the census share, Culiacán's 17,441 would be about 24,700.
 
 ## Method
 

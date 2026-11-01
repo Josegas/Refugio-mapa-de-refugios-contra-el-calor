@@ -55,7 +55,7 @@
    "cultura": 17,
    "comunitario": 30
   },
-  "candidates": 337,
+  "candidates": 336,
   "hexes": 9504,
   "hoods": 4
  },
@@ -266,8 +266,8 @@
  ],
  "proposals": {
   "n": 10,
-  "new_pop60": 4817,
-  "new_pop": 28068,
+  "new_pop60": 4784,
+  "new_pop": 28596,
   "pct60_le10_before": 44.1,
   "pct60_le10_after": 51.9,
   "coverage_curve_pct60": [
@@ -299,8 +299,19 @@
   "places_classified": {
    "refugio": 259,
    "alivio": 666,
-   "candidates": 337
+   "candidates": 336
   },
-  "build_seconds": 2.4
+  "build_seconds": 2.5
+ },
+ "census": {
+  "source": "INEGI, Censo de Población y Vivienda 2020, ITER",
+  "locality": "Mexicali",
+  "pobtot": 854186,
+  "p_60ymas": 97456,
+  "share60_census_pct": 11.4,
+  "share60_census_municipality_pct": 11.7,
+  "share60_hrsl_pct": 7.9,
+  "ratio": 1.45,
+  "gt15_pop60_if_census_share": 23600.0
  }
 }

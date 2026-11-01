@@ -27,9 +27,10 @@ their own address with Amazon Location Service.</p>
 
 <h2>Key figures</h2>
 
-<table><thead><tr><th scope="col">City</th><th scope="col">Older adults (60+)</th><th scope="col">More than 15 min on foot from a refuge</th><th scope="col">...counting pharmacies and convenience stores too</th><th scope="col">Within 10 min of a refuge: today → with 10 proposed public buildings</th></tr></thead><tbody><tr><td>Culiacán, Sinaloa</td><td>55,485</td><td>17,441 (31.4%)</td><td>1,790 (3.2%)</td><td>40.7% → 51.6%</td></tr><tr><td>Hermosillo, Sonora</td><td>63,621</td><td>18,859 (29.6%)</td><td>1,908 (3.0%)</td><td>41.2% → 51.5%</td></tr><tr><td>Mexicali, Baja California</td><td>61,403</td><td>16,242 (26.5%)</td><td>1,801 (2.9%)</td><td>44.1% → 51.9%</td></tr></tbody></table>
+<table><thead><tr><th scope="col">City</th><th scope="col">Older adults (60+)</th><th scope="col">More than 15 min on foot from a refuge</th><th scope="col">...counting pharmacies and convenience stores too</th><th scope="col">Within 10 min of a refuge: today → with 10 proposed public buildings</th></tr></thead><tbody><tr><td>Culiacán, Sinaloa</td><td>55,485</td><td>17,441 (31.4%)</td><td>1,790 (3.2%)</td><td>40.7% → 51.4%</td></tr><tr><td>Hermosillo, Sonora</td><td>63,621</td><td>18,859 (29.6%)</td><td>1,908 (3.0%)</td><td>41.2% → 51.5%</td></tr><tr><td>Mexicali, Baja California</td><td>61,403</td><td>16,242 (26.5%)</td><td>1,801 (2.9%)</td><td>44.1% → 51.9%</td></tr></tbody></table>
 <p class="note">Walking speed 3.6 km/h, along the real street network. Older adults are
-people aged 60 or more in the Meta/CIESIN High Resolution Settlement Layer. A refuge is a mall, department
+people aged 60 or more in the Meta/CIESIN High Resolution Settlement Layer, which counts about 30% fewer of them
+than Mexico's 2020 census (see the evidence below). A refuge is a mall, department
 store, large supermarket, library, museum, cultural or community center (air conditioning assumed from the
 type of place).</p>
 
@@ -88,7 +89,7 @@ browser with MapLibre GL JS and h3-js on an Amazon Location base map, and hosted
 </ol>
 <h3>Pipeline volumes, per city</h3>
 
-<table><thead><tr><th scope="col">City</th><th scope="col">Places read → classified</th><th scope="col">Street segments → walking network</th><th scope="col">Population → hexagons</th><th scope="col">Candidates → proposals</th><th scope="col">Download + compute time</th></tr></thead><tbody><tr><td>Culiacán</td><td>28,002 → 211 refuges, 366 quick stops, 197 candidates</td><td>49,024 → 39,069 nodes, 57,276 edges (4,567 km)</td><td>90,767 populated pixels → 6,932 hexagons</td><td>197 → 10</td><td>34.1 s + 2.1 s</td></tr><tr><td>Hermosillo</td><td>34,233 → 218 refuges, 455 quick stops, 243 candidates</td><td>56,286 → 48,330 nodes, 67,950 edges (5,350 km)</td><td>93,872 populated pixels → 7,478 hexagons</td><td>243 → 10</td><td>38.3 s + 2.2 s</td></tr><tr><td>Mexicali</td><td>39,744 → 259 refuges, 666 quick stops, 337 candidates</td><td>53,732 → 41,840 nodes, 61,805 edges (5,800 km)</td><td>114,752 populated pixels → 9,504 hexagons</td><td>337 → 10</td><td>40.6 s + 2.4 s</td></tr></tbody></table>
+<table><thead><tr><th scope="col">City</th><th scope="col">Places read → classified</th><th scope="col">Street segments → walking network</th><th scope="col">Population → hexagons</th><th scope="col">Candidates → proposals</th><th scope="col">Download + compute time</th></tr></thead><tbody><tr><td>Culiacán</td><td>28,002 → 211 refuges, 366 quick stops, 196 candidates</td><td>49,024 → 39,069 nodes, 57,276 edges (4,567 km)</td><td>90,767 populated pixels → 6,932 hexagons</td><td>196 → 10</td><td>34.1 s + 2.1 s</td></tr><tr><td>Hermosillo</td><td>34,233 → 218 refuges, 455 quick stops, 243 candidates</td><td>56,286 → 48,330 nodes, 67,950 edges (5,350 km)</td><td>93,872 populated pixels → 7,478 hexagons</td><td>243 → 10</td><td>38.3 s + 2.3 s</td></tr><tr><td>Mexicali</td><td>39,744 → 259 refuges, 666 quick stops, 336 candidates</td><td>53,732 → 41,840 nodes, 61,805 edges (5,800 km)</td><td>114,752 populated pixels → 9,504 hexagons</td><td>336 → 10</td><td>40.6 s + 2.5 s</td></tr></tbody></table>
 <p class="note">Times measured on a laptop on a home connection: the download reads from Amazon S3,
 the compute step runs locally.</p>
 
@@ -107,11 +108,12 @@ deploying, and an uptime check runs every 3 hours.</p>
 <figure><img src="img/k8_validation_culiacan.png" alt="Scatter plot of walking minutes, open-data map versus Amazon Location routes, for 50 random hexagons: the points sit on the y = x line." loading="lazy"><figcaption>Each dot is one hexagon: open-data minutes against Amazon Location minutes. The shaded band is ±2 minutes.</figcaption></figure>
 <p><b>What Overture is missing.</b> In 10%
 of those hexagons (home to 12% of the sampled older adults),
-Amazon Location <code>SearchNearby</code> knows a refuge-type place at least 150 m closer. The headline figure is
-best read as an upper bound.</p>
+Amazon Location <code>SearchNearby</code> knows a refuge-type place at least 150 m closer. So the share of older
+adults far from a refuge is probably somewhat lower than shown.</p>
 <p><b>Spot-check.</b> Of 15 random refuges, Amazon Location found 10 of 15 by
 name within 300 m, 8 of 15 with a compatible category.</p>
 <p>Only these aggregate numbers were kept; the Amazon Location responses were not stored.</p>
+<p><b>How many older adults? HRSL vs the 2020 census.</b> INEGI's census (ITER 2020) counts a larger share of people aged 60+ in each city than HRSL does in our study area. If HRSL misses older adults evenly, the shares on the map hold, but the counts are low:</p><table><thead><tr><th scope="col">City</th><th scope="col">Aged 60+, census 2020 (city)</th><th scope="col">Aged 60+, HRSL</th><th scope="col">Older adults more than 15 min away: HRSL → with the census share</th></tr></thead><tbody><tr><td>Culiacán</td><td>10.9%</td><td>7.7%</td><td>17,441 → about 24,700</td></tr><tr><td>Hermosillo</td><td>11.4%</td><td>7.8%</td><td>18,859 → about 27,400</td></tr><tr><td>Mexicali</td><td>11.4%</td><td>7.9%</td><td>16,242 → about 23,600</td></tr></tbody></table>
 
 <h2>Where refuges are missing</h2>
 
@@ -122,16 +124,18 @@ name within 300 m, 8 of 15 with a compatible category.</p>
 <h3>Mexicali</h3>
 <table><thead><tr><th scope="col">Area</th><th scope="col">Older adults more than 15 min away</th><th scope="col">Median walk</th></tr></thead><tbody><tr><td>East area, 3.0 km from downtown</td><td>3,511</td><td>22 min</td></tr><tr><td>Southwest area, 3.9 km from downtown</td><td>1,481</td><td>25 min</td></tr><tr><td>Los Alamos International Center</td><td>1,419</td><td>23 min</td></tr><tr><td>Northwest area, 5.3 km from downtown</td><td>1,203</td><td>19 min</td></tr><tr><td>East area, 8.8 km from downtown</td><td>823</td><td>23 min</td></tr></tbody></table>
 <h2>10 public buildings that could open as refuges in Culiacán</h2>
-<table><thead><tr><th scope="col">#</th><th scope="col">Building</th><th scope="col">Type</th><th scope="col">Older adults newly within 10 min</th></tr></thead><tbody><tr><td>1</td><td>Primaria “Pdte. Lic. Adolfo López Mateos”</td><td>Public school</td><td>+731</td></tr><tr><td>2</td><td>Escuela Primaria 22 de Diciembre</td><td>Public school</td><td>+722</td></tr><tr><td>3</td><td>Difusión Cultural Preparatoria Sandino</td><td>Public school</td><td>+679</td></tr><tr><td>4</td><td>Escuela Primaria Héroe De Nacozari</td><td>Public school</td><td>+672</td></tr><tr><td>5</td><td>Jardín de Niños Juan de Dios Bautista</td><td>Public school</td><td>+658</td></tr><tr><td>6</td><td>Primaria Ovidio Decroly</td><td>Public school</td><td>+647</td></tr><tr><td>7</td><td>Eti #50</td><td>Public school</td><td>+559</td></tr><tr><td>8</td><td>Escuela Primaria Agustin Melgar</td><td>Public school</td><td>+493</td></tr><tr><td>9</td><td>Jardin de Ninos Luz Maria Serradel</td><td>Public school</td><td>+475</td></tr><tr><td>10</td><td>Unidad Académica Preparatoria Central Nocturna</td><td>Public school</td><td>+449</td></tr></tbody></table>
+<table><thead><tr><th scope="col">#</th><th scope="col">Building</th><th scope="col">Type</th><th scope="col">Older adults newly within 10 min</th></tr></thead><tbody><tr><td>1</td><td>Primaria “Pdte. Lic. Adolfo López Mateos”</td><td>Public school</td><td>+731</td></tr><tr><td>2</td><td>Escuela Primaria 22 de Diciembre</td><td>Public school</td><td>+722</td></tr><tr><td>3</td><td>Difusión Cultural Preparatoria Sandino</td><td>Public school</td><td>+679</td></tr><tr><td>4</td><td>Escuela Primaria Héroe De Nacozari</td><td>Public school</td><td>+672</td></tr><tr><td>5</td><td>Jardín de Niños Juan de Dios Bautista</td><td>Public school</td><td>+658</td></tr><tr><td>6</td><td>Eti #50</td><td>Public school</td><td>+559</td></tr><tr><td>7</td><td>Jardin de Ninos Luz Maria Serradel</td><td>Public school</td><td>+559</td></tr><tr><td>8</td><td>Escuela Primaria Agustin Melgar</td><td>Public school</td><td>+493</td></tr><tr><td>9</td><td>Unidad Académica Preparatoria Central Nocturna</td><td>Public school</td><td>+449</td></tr><tr><td>10</td><td>Escuela Primaria Vicente Guerrero</td><td>Public school</td><td>+437</td></tr></tbody></table>
 <p class="note">With these 10, older adults within a 10-minute walk of a refuge go from
-40.7% to 51.6% (+6,085 people). "Public" is inferred
+40.7% to 51.4% (+5,959 people). "Public" is inferred
 from the building's name, not from an official registry.</p>
 
 <h2>Limitations</h2>
 <ul>
 <li>Air conditioning and free entry are assumed from the type of place, not checked one by one.</li>
 <li>Overture doesn't list every place (it has few convenience stores), so real access is probably better than shown.</li>
-<li>The age of the census behind the HRSL 60+ layer is not documented on the registry page.</li>
+<li>HRSL counts about 30% fewer people aged 60+ than Mexico's 2020 census (7.7% vs
+10.9% in Culiacán), so the counts of older adults are probably low; the shares are not
+affected if the gap is even across the city. See the evidence above.</li>
 <li>Shade, sidewalks, safety and opening hours are not modeled: malls close at night, and the heat peaks from 2 to 5 pm.</li>
 <li>The map doesn't know who has a car. The walking speed is an assumption; Amazon Location isolines use the
 service's default pedestrian speed, which can't be set.</li>

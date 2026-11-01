@@ -301,6 +301,17 @@
    "alivio": 455,
    "candidates": 243
   },
-  "build_seconds": 2.2
+  "build_seconds": 2.3
+ },
+ "census": {
+  "source": "INEGI, Censo de Población y Vivienda 2020, ITER",
+  "locality": "Hermosillo",
+  "pobtot": 855563,
+  "p_60ymas": 97155,
+  "share60_census_pct": 11.4,
+  "share60_census_municipality_pct": 11.2,
+  "share60_hrsl_pct": 7.8,
+  "ratio": 1.45,
+  "gt15_pop60_if_census_share": 27400.0
  }
 }

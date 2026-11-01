@@ -75,6 +75,28 @@ agree with the type we assumed?
 Billable requests for check 3: 15.
 <!-- END:spot -->
 
+<!-- BEGIN:census -->
+## 4. People aged 60+: HRSL vs Mexico's 2020 census
+
+Written by `pipeline/census.py` on 2026-11-01. Census: INEGI, *Censo de Población y Vivienda
+2020, Principales resultados por localidad (ITER)*, columns `POBTOT` and `P_60YMAS`, for the city itself
+(locality 0001) and for the whole municipality.
+
+| City | Census 2020, city | Census 2020, municipality | HRSL, our study area | Census / HRSL | Older adults more than 15 min from a refuge: HRSL → if HRSL had the census share |
+|---|---|---|---|---|---|
+| Culiacán | 10.9% (87,853 of 808,416) | 11.1% | 7.7% | 1.42× | 17,441 → about 24,700 |
+| Hermosillo | 11.4% (97,155 of 855,563) | 11.2% | 7.8% | 1.45× | 18,859 → about 27,400 |
+| Mexicali | 11.4% (97,456 of 854,186) | 11.7% | 7.9% | 1.45× | 16,242 → about 23,600 |
+
+HRSL counts about 30% fewer people aged 60+ than the census in all three cities. The **shares** on the map
+(for example, 31.4% of older adults more than 15 minutes away) don't depend on that if HRSL misses older adults
+evenly across each city; the **counts** of older adults are probably low by the ratio in the table. The map
+keeps the HRSL figures, because they are the ones with a known location; the census-based figure is an estimate.
+
+This pushes the other way from section 2. The places Overture is missing make the **share** of older adults far
+from a refuge look higher than it is; the census says the **number** of older adults behind that share is higher.
+<!-- END:census -->
+
 ## Notes from the manual review
 
 - A "no" in the spot-check doesn't prove a place is missing: chain names (Soriana) and different

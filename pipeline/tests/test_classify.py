@@ -56,6 +56,9 @@ def test_classify(name, cat, expected):
     ("UltraGym & Fitness", "sports_and_recreation", None),
     ("Penal de Aguaruto", "social_or_community_service", None),
     ("Centros Comunitarios Rosa", "sports_and_recreation", "deportivo"),
+    # Proposals whose public status couldn't be confirmed (journal 2026-11-01)
+    ("Primaria Ovidio Decroly", "school", None),
+    ("Ecos Preescolar y Primaria", "school", None),
 ])
 def test_candidate_type(name, cat, expected):
     assert candidate_type(name, cat) == expected
