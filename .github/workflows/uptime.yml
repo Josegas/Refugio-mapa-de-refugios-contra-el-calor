@@ -1,0 +1,35 @@
+name: Uptime
+
+on:
+  schedule:
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+    inputs:
+      site:
+        description: "URL to check (leave empty for the live site)"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      SITE: ${{ inputs.site || 'https://main.d6r3007drgrwp.amplifyapp.com'}}
+
+    steps:
+      - name: The page answers and shows the figures without JavaScript
+        run: curl -fsS --retry 3 --retry-delay 10 --max-time 20 "$SITE/" | grep -q 'class="hero-num"'
+
+      - name: The map data loads
+        run: curl -fsS --retry 3 --retry-delay 10 --max-time 20 -o /dev/null "$SITE/data/culiacan/hex.json"
+
+      - name: The Amazon Location key still works from the site's domain
+        run: |
+          KEY=$(curl -fsS --max-time 20 "$SITE/config.js" | sed -nE "s/.*apiKey: '([^']+)'.*/\1/p")
+          echo "::add-mask::$KEY"
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 -H "Referer: $SITE/" \
+            "https://maps.geo.us-west-2.amazonaws.com/v2/styles/Monochrome/descriptor?key=$KEY")
+          echo "Amazon Location answered HTTP $CODE"
+          test "$CODE" = "200"
