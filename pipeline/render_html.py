@@ -169,10 +169,10 @@ def meta(s):
 
 SITE = "https://main.d6r3007drgrwp.amplifyapp.com"
 REPO = "https://github.com/Josegas/Refugio-mapa-de-refugios-contra-el-calor"
-ARTICLE = None  # Builder Center article URL: fill in once it's published, then re-run this script
-VIDEO = None    # public video URL: same
+ARTICLE = None  # URL of the AWS Builder Center article (links are only shown when set)
+VIDEO = None    # URL of the video demo
 
-HEAT_FACTS = [  # (fact, source URL) - CLAUDE.md section 14
+HEAT_FACTS = [  # (fact, source URL)
     ("Sinaloa ranked first in Mexico for heat-related illness cases in epidemiological week 32 of 2026 "
      "(20 cases, Mexico's Health Ministry).",
      "https://www.yucatan.com.mx/merida/2026/08/20/otro-caso-de-golpe-de-calor-en-yucatan-en-mexico-hay-4-nuevas-defunciones.html"),

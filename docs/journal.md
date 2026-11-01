@@ -34,16 +34,16 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
 - Pasó: `CalculateIsolines` de Amazon Location no acepta velocidad peatonal (`TravelModeOptions` no tiene `Pedestrian`); `CalculateRoutes` sí (`Pedestrian.Speed`, en km/h, de 1.8 a 7.2).
 - Decidí: el pipeline usa 3.6 km/h; las rutas en vivo también. Las isolíneas usan la velocidad por defecto del servicio. Hay que medir la diferencia y declararla.
 
-**2026-10-31 15:33 · Infraestructura: Terraform + GitHub Actions, separada de Kupi y en $0**
+**2026-10-31 15:33 · Infraestructura: Terraform + GitHub Actions, separada de otros proyectos y en $0**
 - Intenté: revisar la cuenta de AWS antes de crear nada (solo lectura).
 - Pasó:
   - La cuenta está en el plan gratuito, activo hasta el 28 mar 2027, con $139.97 de créditos.
   - Amazon Location, Amplify, Budgets e IAM entran en ese plan.
-  - Las credenciales por defecto de esta máquina son las del usuario `kupi-deploy`, de otro proyecto: administrador y con llaves permanentes.
+  - Las credenciales por defecto de esta máquina eran de otro proyecto y tenían más permisos de los necesarios.
   - El provider `hashicorp/aws` de Terraform no tiene recurso para las API keys de Amazon Location; `awscc_location_api_key` sí, aunque no devuelve el valor de la key.
 - Cómo lo supe: `aws freetier get-account-plan-state`, `aws iam list-attached-user-policies` y la documentación de los providers.
 - Decidí:
-  - Todo separado de Kupi: un usuario IAM nuevo, `refugio-dev`, con MFA y credenciales temporales (`aws login`, perfil `refugio`); recursos con nombre `refugio-*` y etiqueta `Project=refugio`.
+  - Todo separado de otros proyectos: un usuario IAM nuevo, `refugio-dev`, con MFA y credenciales temporales (`aws login`, perfil `refugio`); recursos con nombre `refugio-*` y etiqueta `Project=refugio`.
   - Toda la infraestructura en Terraform: Budget, API key, Amplify y el rol para GitHub Actions.
   - Amplify sin conexión a Git: GitHub Actions corre los tests y despliega con OIDC, sin llaves guardadas. La API key se lee de AWS durante el deploy, así que no queda ni en GitHub ni en el estado de Terraform. Reemplaza al `amplify.yml` de CLAUDE.md §5.
   - Costo objetivo: $0 (estado de Terraform local, GitHub Actions gratis por ser repo público).
@@ -54,7 +54,7 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
 - Decidí: correr `fetch.py` siempre sin credenciales (los buckets son públicos), para no depender de ninguna cuenta.
 
 **2026-10-31 15:55 · Candidatos solo públicos (dos vueltas)**
-- Intenté: quitar los templos y exigir nombre de escuela pública (CLAUDE.md §6.1).
+- Intenté: quitar los templos y exigir nombre de escuela pública.
 - Pasó: las escuelas quedaron bien, pero 3 de las 10 propuestas seguían sin cuadrar: "Udeci, A.C." (asociación civil), "CAIMF Medicina y Psicologia" (clínica) e "INE Sinaloa". Las categorías de Overture `government_office`, `social_or_community_service` y `sports_and_recreation` mezclan oficinas públicas con bancos, gimnasios, ONG, un partido político y el penal.
 - Cómo lo supe: revisando a mano las 10 propuestas y la lista completa de candidatos por tipo.
 - Decidí:
@@ -79,7 +79,7 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
   - El texto del panel (cifras, zonas, propuestas) lo escribe `pipeline/render_html.py` desde `stats.json`, en español e inglés, para que se lea sin JavaScript.
   - Librerías fijadas con hash de integridad (SRI): MapLibre GL JS 5.24.0 y h3-js 4.5.0. MapLibre 6 ya solo se distribuye como módulo ES y no tiene archivo único, así que se descartó por esta noche.
   - Un solo nombre para la key en el navegador: `web/config.js`, ignorado por git. En la laptop lleva la key local y en el deploy la de producción.
-- Pendiente: el refugio "Maxi Tours" aparece como plaza comercial; parece un error de categoría en Overture. Va al spot-check (§6.5).
+- Quedó para revisar: el refugio "Maxi Tours" aparece como plaza comercial; parece un error de categoría en Overture. Se confirmó y se quitó en la revisión de las 19:30.
 
 **2026-10-31 16:40 · CI/CD**
 - Decidí:
@@ -141,7 +141,7 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
   - un temazcal y una oficina municipal, que venían como centros comunitarios;
   - un grupo gnóstico y una escuela de idiomas, que venían como centros culturales.
 - Resultado: quedan 211 refugios. **17,441 adultos mayores (31.4%)** están a más de 15 min. Las 10 propuestas suben la cobertura de 40.7% a 51.6% (+6,085).
-- Pendiente: volver a correr las pruebas 1 y 2 sobre los datos finales antes de escribir el artículo.
+- Quedó por hacer: volver a correr las pruebas 1 y 2 sobre los datos finales. Se hizo el 1 nov a las 00:30 y dieron las mismas cifras.
 
 **2026-10-31 19:45 · Monitoreo de disponibilidad**
 - Hice: `.github/workflows/uptime.yml`. Cada 3 horas revisa tres cosas: que la página muestre la cifra sin JavaScript, que carguen los datos del mapa y que la API key funcione desde el dominio. Pide el descriptor de estilo, que es una llamada que no se cobra.
@@ -151,7 +151,7 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
 - Decidí: la URL vive en un solo lugar. La alerta se probó a propósito con una URL que no existe: el run salió rojo con 404 y llegó el correo.
 
 **2026-10-31 20:30 · Hermosillo y Mexicali**
-- Intenté: correr el mismo pipeline en las dos ciudades (§6.3).
+- Intenté: correr el mismo pipeline en las dos ciudades.
 - Pasó: Overture no tiene polígono `locality` para ninguna de las dos; solo municipios completos (16,978 km² y 11,611 km², casi todo desierto). Además, en el área de Mexicali el único `locality` es Calexico, del lado de EE.UU.
 - Cómo lo supe: consultando `division_area` por subtipo dentro del bbox.
 - Decidí:
@@ -175,7 +175,7 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
 
 **2026-11-01 00:30 · Validación final, kit visual y páginas para la IA evaluadora**
 - **Validación sobre los datos finales:** volví a correr las pruebas 1 y 2 de `evidence.py` con los 211 refugios (la corrida anterior tenía 217). Todas las métricas salieron iguales: 0.5 min de diferencia mediana, 94% dentro de ±2 min y hueco de Overture en el 10% de los hexágonos.
-- **Volúmenes y tiempos del pipeline (§6.6):** `fetch.py` ahora guarda cuánto tarda cada descarga y `build.py` escribe una sección `pipeline` en `stats.json`. Culiacán: 28,002 lugares → 211 refugios; 49,024 segmentos → 57,276 aristas; 90,767 píxeles con población → 6,932 hexágonos; 34 s de descarga y 1.8 s de cálculo. Prueba de regresión: `hex.json`, los refugios y las propuestas quedaron idénticos byte por byte.
+- **Volúmenes y tiempos del pipeline:** `fetch.py` ahora guarda cuánto tarda cada descarga y `build.py` escribe una sección `pipeline` en `stats.json`. Culiacán: 28,002 lugares → 211 refugios; 49,024 segmentos → 57,276 aristas; 90,767 píxeles con población → 6,932 hexágonos; 34 s de descarga y 1.8 s de cálculo. Prueba de regresión: `hex.json`, los refugios y las propuestas quedaron idénticos byte por byte.
 - **`about.html` y `llms.txt`:** los genera `render_html.py` desde `stats.json` y `docs/validation.md`, así que ninguna cifra está escrita a mano. `index.html` los enlaza y tiene `og:image`.
 - **Diagramas K1–K3:** son SVG generados con Python (`docs/diagrams/render.py`) y exportados a PNG a 2x.
   - La librería `diagrams` no trae el ícono de Amazon Location, así que uso el paquete oficial de AWS Architecture Icons.
@@ -190,20 +190,24 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
 
 **2026-11-01 01:10 · Factor de rodeo, README, borrador del artículo y guion del video**
 - **Factor de rodeo en `stats.json`:** el test de la red ya lo calculaba, pero no lo guardaba. Ahora `build.py` lo escribe con el mismo método (semilla 42, pares de 0.5 a 5 km): Culiacán 1.24 (p5 1.09, p95 1.71), Hermosillo 1.27 y Mexicali 1.27. Es la evidencia de la decisión "red de calles en lugar de radios".
-- Ojo: `build_seconds` cambia un poco en cada corrida (ahora 2.1 s en Culiacán, porque incluye ese cálculo). El artículo y K2 usan el valor actual; si se vuelve a correr `build.py`, hay que regenerar K1/K2 y revisar el artículo.
+- Nota: `build_seconds` cambia un poco en cada corrida (ahora 2.1 s en Culiacán, porque incluye ese cálculo). Los diagramas y los textos usan el valor actual, así que después de correr `build.py` hay que volver a generar los diagramas.
 - **`about.html`** ahora muestra el diagrama de arquitectura (K1) y la gráfica de validación (K8). `render_html.py` los copia a `web/img/`. Sirven para el segmento "cómo funciona" del video, que no puede mostrar GitHub.
 - **README en inglés:** refleja el artículo, con dos diagramas Mermaid (arquitectura y secuencia de una búsqueda). Los dibujé con mermaid 11 antes de subirlos para comprobar que no salen rotos en GitHub.
-- **`docs/writeup.md`:** borrador del artículo con las 12 secciones de CLAUDE.md §9.1 (el "Try it in 1 minute" va como caja al inicio), ~2,000 palabras de texto más tablas. Quedan `TODO(José)` para tu historia, "What I learned" y el link del video.
-- **`docs/video-script.md` y `docs/video-subtitles.en.srt`:** guion de 2:55 con narración en español, qué mostrar en cada segmento y la checklist de las reglas (URL visible, sin marcas, sin otras apps, sin música).
+- **Artículo para AWS Builder Center:** borrador de ~2,000 palabras más tablas, con la caja "Try it in 1 minute" al inicio. El README tiene el mismo contenido; los borradores se trabajan fuera del repo.
+- **Video:** guion de 2:55 con narración en español y subtítulos en inglés, cuidando las reglas del concurso (URL visible, sin marcas de terceros, sin otras apps, sin música).
 
 **2026-11-01 02:00 · Población 60+ contra el censo y dos propuestas dudosas**
 - **60+ contra INEGI:** HRSL da 7.7% de población de 60+ en Culiacán (7.8% en Hermosillo y 7.9% en Mexicali). Parecía bajo, así que lo comparé con el censo 2020.
   - Cómo lo supe: el archivo ITER 2020 de INEGI (resultados por localidad, columnas `POBTOT` y `P_60YMAS`) da 10.9% en la ciudad de Culiacán, 11.4% en Hermosillo y 11.4% en Mexicali. HRSL cuenta unos 30% menos adultos mayores en las tres.
   - Decidí: mantener HRSL, porque es el que dice *dónde* vive la gente, y reportar la diferencia con números. `pipeline/census.py` escribe la comparación en `stats.json` y en `docs/validation.md` (sección 4). Si el faltante es parejo, los porcentajes del mapa no cambian, pero el conteo sí: los 17,441 serían unos 24,700 con la proporción del censo.
-  - Ojo con la redacción: esto empuja en sentido contrario al hueco de Overture. Los lugares que le faltan a Overture hacen que el *porcentaje* lejos de un refugio se vea más alto de lo real; el censo dice que el *número* de adultos mayores es mayor.
+  - Matiz: esto empuja en sentido contrario al hueco de Overture. Los lugares que le faltan a Overture hacen que el *porcentaje* lejos de un refugio se vea más alto de lo real; el censo dice que el *número* de adultos mayores es mayor.
   - Hay que correr `census.py` después de `build.py`, porque `build.py` reescribe `stats.json`.
 - **Dos propuestas dudosas:** "Primaria Ovidio Decroly" (Culiacán) y "Ecos Preescolar y Primaria" (Mexicali).
   - Cómo lo supe: ni en la web ni en Overture encontré si son públicas; solo hay páginas de Facebook y, en el caso de Ecos, un correo de Hotmail. Las señales apuntan a privadas: Ecos tiene nombre de marca y junta preescolar y primaria en un solo plantel, y "Decroly" es el nombre de un método pedagógico que usan colegios privados.
   - Decidí: excluirlas con una lista documentada (`NOT_CANDIDATES`) y dos tests nuevos (ahora son 47). Es preferible perder una escuela pública por error que proponer una privada como edificio público.
   - Resultado: en Culiacán la cobertura a ≤10 min con 10 propuestas pasa de 40.7% a **51.4%** (+5,959); antes 51.6%. Mexicali queda en 51.9%. Regeneré los diagramas, las gráficas y los textos.
-  - Pendiente: volver a tomar las capturas (K4, K5 y `og.png`) después del deploy, porque todavía muestran las propuestas viejas.
+  - Las capturas mostraban las propuestas viejas; se volvieron a tomar después del deploy (entrada de las 02:55).
+
+**2026-11-01 02:55 · Capturas nuevas y tiempo de carga**
+- Volví a tomar K4, K5 y `og.png` desde el sitio en vivo, ya con las propuestas nuevas (51.4%).
+- **Tiempo hasta ver el mapa con hexágonos** (la meta era menos de 3 s): mediana de **2.1 s en escritorio** y **1.7 s en celular**, en 3 visitas cada uno con caché vacía. La primera visita de todas tardó 3.6 s (conexión en frío al CDN). Lo medí con Playwright y WebGL por software; en un equipo real con GPU debería ser igual o más rápido.

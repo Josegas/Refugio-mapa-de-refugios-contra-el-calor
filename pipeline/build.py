@@ -98,7 +98,7 @@ PUBLIC_SCHOOL = re.compile(r"\b(escuela|primaria|secundaria|telesecundaria|jardi
                            r"cetis|conalep|cobaes|bachillerato|preparatoria|eti|uas)\b")
 # Overture's government/social/sports categories are very noisy (banks, gyms, NGOs, the prison...),
 # so a non-school candidate only counts if its name says it is one of the public buildings in the
-# definition (CLAUDE.md §2): sindicatura, municipal delegation, community center, house of culture,
+# project's definition of a candidate: sindicatura, municipal delegation, community center, house of culture,
 # or a public sports unit.
 PUBLIC_OTHER = re.compile(r"\b(sindicatura|centros? comunitarios?|centro de desarrollo comunitario|cdc|"
                           r"casa de la cultura|unidad deportiva|polideportivo|isde|ayuntamiento|"
@@ -564,7 +564,7 @@ def build(city_id):
                       "pct60_le10_before": round(100 * le10_60 / tot60, 1),
                       "pct60_le10_after": round(100 * (le10_60 + new60) / tot60, 1),
                       "coverage_curve_pct60": curve},
-        # Volumes at each stage and how long it took (the pipeline diagram, CLAUDE.md 6.6)
+        # Volumes at each stage and how long it took (drawn in docs/assets/k2_pipeline.png)
         "pipeline": {**pipeline_volumes(city_id),
                      "places_classified": {"refugio": int((tiers == "refugio").sum()),
                                            "alivio": int((tiers == "alivio").sum()),

@@ -1,4 +1,4 @@
-"""Evidence for the write-up: how good is the open-data walking map? (CLAUDE.md sections 6.4 and 6.5)
+"""Evidence for the write-up: how good is the open-data walking map?
 
 Three checks against Amazon Location Service, with your own AWS credentials (profile "refugio"):
 

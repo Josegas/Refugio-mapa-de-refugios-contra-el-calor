@@ -12,8 +12,6 @@ open data on AWS and Amazon Location Service. Made for the AWS Builder Center **
 - Press one of the three example buttons, or type any Culiacán address, e.g. `Colonia Libertad, Culiacán`.
   Tap any hexagon, switch to "refuges + pharmacies and stores", or change the city to Hermosillo or Mexicali.
 - **Method, results and validation on one page:** https://main.d6r3007drgrwp.amplifyapp.com/about.html
-- **Article on AWS Builder Center:** TODO(José): link
-- **Video (under 3 min):** TODO(José): link
 
 ## Why
 
@@ -165,7 +163,7 @@ python docs/diagrams/render.py                               # K1-K3 (downloads 
 |---|---|
 | `pipeline/` | `fetch.py` (download), `build.py` (walking access), `render_html.py` (page text), `evidence.py` (validation), tests |
 | `web/` | The static app (`index.html`, `app.js`, `style.css`), `about.html`, `llms.txt`, and `web/data/` with the generated data |
-| `docs/` | Journal, validation, write-up draft, video script, diagrams and assets |
+| `docs/` | Development journal, validation results, and the scripts and images of the diagrams, charts and screenshots |
 | `infra/` | Terraform |
 | `deploy/` | The deploy script used by GitHub Actions |
 
