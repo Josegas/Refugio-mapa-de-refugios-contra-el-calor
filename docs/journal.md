@@ -87,3 +87,17 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
   - `deploy.yml` reutiliza `ci.yml` y solo publica si todo pasa. El deploy usa OIDC (rol `refugio-github-deploy`), lee la key de producción en el momento y termina con un smoke test con `curl`.
   - Regla propia de gitleaks para keys `v1.public.`: el historial está limpio y la regla detecta una key falsa.
   - actionlint: sin errores.
+
+**2026-10-31 17:20 · Primer deploy: dos errores y lo que enseñaron**
+- **Error 1, el workflow no arrancó** (0 s, "workflow file issue"):
+  - Pasó: en `ci.yml` los jobs `secrets` y `terraform` quedaron sin sangría, así que YAML los leyó como secciones del archivo y no como jobs. Además había un typo (`pyhton-version`) y una ruta mal escrita (`pipeline/test`).
+  - Cómo lo supe: `gh run view` y `actionlint` corrido con Docker, que da el número de línea.
+  - Decidí: correr actionlint antes de cada push.
+- **Error 2, `Not authorized to perform sts:AssumeRoleWithWebIdentity`:**
+  - Pasó: los 3 checks pasaron, pero AWS rechazó el token de GitHub. El repo usa el formato *immutable subject* de GitHub, donde el `sub` es `repo:Josegas@80491054/Refugio-...@1441297459:environment:production`, con los IDs del dueño y del repo. La política de confianza esperaba el formato viejo, solo con nombres.
+  - Cómo lo supe: `gh api repos/{owner}/{repo}/actions/oidc/customization/sub`.
+  - Decidí: la política de confianza usa el formato con IDs, que es más seguro: un repo borrado y recreado con el mismo nombre no podría desplegar.
+- **Hallazgo extra, un "perpetual diff" en Amplify:**
+  - Pasó: el plan también quería "cambiar" los headers de seguridad de Amplify sin que hubieran cambiado.
+  - Cómo lo supe: Terraform lo marcaba como `# whitespace changes`. AWS guarda los headers como JSON compacto con `pattern` antes de `headers`, y el código los tenía en YAML.
+  - Decidí: escribirlos en Terraform exactamente como AWS los guarda. Ahora el plan solo muestra el cambio real.

@@ -10,17 +10,12 @@ resource "aws_amplify_app" "refugio" {
 
   # Security headers on every response. Referrer-Policy matters for this app: the Amazon
   # Location key only works if the browser tells AWS which site the request comes from.
-  custom_headers = <<-YAML
-    customHeaders:
-      - pattern: '**/*'
-        headers:
-          - key: Strict-Transport-Security
-            value: max-age=31536000
-          - key: X-Content-Type-Options
-            value: nosniff
-          - key: Referrer-Policy
-            value: strict-origin-when-cross-origin
-  YAML
+  # Written exactly as Amplify stores it (compact JSON, "pattern" before "headers"). Any other
+  # spelling of the same headers makes `terraform plan` report a false change on every run.
+  custom_headers = chomp(<<-JSON
+    [{"pattern":"**/*","headers":[{"key":"Strict-Transport-Security","value":"max-age=31536000"},{"key":"X-Content-Type-Options","value":"nosniff"},{"key":"Referrer-Policy","value":"strict-origin-when-cross-origin"}]}]
+  JSON
+  )
 }
 
 # The production branch. Its public address is https://main.<app default domain>

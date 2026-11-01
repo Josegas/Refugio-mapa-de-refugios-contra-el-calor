@@ -6,10 +6,15 @@ variable "region" {
   default     = "us-west-2"
 }
 
-variable "github_repo" {
-  description = "GitHub repository (owner/name) allowed to deploy through OIDC."
+variable "github_oidc_subject_prefix" {
+  description = <<-EOT
+    Start of the "sub" claim in this repository's GitHub OIDC tokens. The repo uses GitHub's
+    immutable subject format (owner@owner_id/repo@repo_id), so a deleted-and-recreated repo with
+    the same name could never deploy. Read it with:
+      gh api "repos/{owner}/{repo}/actions/oidc/customization/sub"
+  EOT
   type        = string
-  default     = "Josegas/Refugio-mapa-de-refugios-contra-el-calor"
+  default     = "repo:Josegas@80491054/Refugio-mapa-de-refugios-contra-el-calor@1441297459"
 }
 
 variable "alert_email" {

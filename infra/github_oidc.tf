@@ -2,7 +2,7 @@
 #
 # How it works:
 #  1. When the deploy job runs, GitHub gives it a short-lived signed token that says
-#     "I am repository <github_repo>, environment production".
+#     "I am repository <owner@id/repo@id>, environment production".
 #  2. AWS checks the token's signature with GitHub's identity provider, registered below.
 #  3. If the token matches the trust policy, AWS returns temporary credentials for the role
 #     (valid 1 hour) with only the permissions in deploy_permissions.
@@ -28,10 +28,11 @@ data "aws_iam_policy_document" "github_trust" {
       values   = ["sts.amazonaws.com"]
     }
 
+    # Immutable subject: includes the owner and repository IDs, not only their names
     condition {
       test     = "StringEquals"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_repo}:environment:production"]
+      values   = ["${var.github_oidc_subject_prefix}:environment:production"]
     }
   }
 }
