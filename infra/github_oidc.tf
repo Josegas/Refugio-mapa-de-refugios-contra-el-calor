@@ -46,10 +46,16 @@ resource "aws_iam_role" "github_deploy" {
 
 # WHAT the role can do: the minimum needed to publish a new version of the site
 data "aws_iam_policy_document" "deploy_permissions" {
+  # AWS checks these actions against the branch's deployments and jobs, not only the branch itself
+  # (learned from the AccessDenied message of the first deploy). Still limited to the main branch.
   statement {
-    sid       = "UploadNewVersion"
-    actions   = ["amplify:CreateDeployment", "amplify:StartDeployment"]
-    resources = [aws_amplify_branch.main.arn]
+    sid     = "UploadNewVersion"
+    actions = ["amplify:CreateDeployment", "amplify:StartDeployment"]
+    resources = [
+      aws_amplify_branch.main.arn,
+      "${aws_amplify_branch.main.arn}/deployments/*",
+      "${aws_amplify_branch.main.arn}/jobs/*",
+    ]
   }
 
   statement {

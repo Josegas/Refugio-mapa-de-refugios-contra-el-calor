@@ -101,3 +101,7 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
   - Pasó: el plan también quería "cambiar" los headers de seguridad de Amplify sin que hubieran cambiado.
   - Cómo lo supe: Terraform lo marcaba como `# whitespace changes`. AWS guarda los headers como JSON compacto con `pattern` antes de `headers`, y el código los tenía en YAML.
   - Decidí: escribirlos en Terraform exactamente como AWS los guarda. Ahora el plan solo muestra el cambio real.
+- **Error 3, `AccessDeniedException` en `amplify:CreateDeployment`:**
+  - Pasó: OIDC y la lectura de la key ya funcionaban, pero AWS revisó `CreateDeployment` sobre `.../branches/main/deployments/*`. La documentación del servicio solo menciona la rama, así que la política solo daba permiso sobre la rama.
+  - Cómo lo supe: el mensaje de AccessDenied dice la acción y el recurso exactos.
+  - Decidí: agregar solo esas rutas (`deployments/*` y `jobs/*` de la rama main). El mínimo privilegio se ajusta con evidencia, no dando permisos de más.
