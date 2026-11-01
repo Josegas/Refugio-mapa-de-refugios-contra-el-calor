@@ -36,6 +36,28 @@ const TEXT = {
     proposalGain: (n) => `+${n} adultos mayores tendrían un refugio a ≤10 min`,
     demo: "Modo demo: falta la API key de Amazon Location, así que no se ve el mapa base. Los datos y las cifras sí son reales.",
     langButton: "EN",
+    searchHere: "Calcular mi caminata desde aquí",
+    from: "Desde",
+    nearestRefuge: "Refugio más cercano",
+    onFootRoute: (min, km) => `${min} min a pie · ruta de Amazon Location (${km} km)`,
+    openDataEstimate: (min) => `${min} según el mapa de datos abiertos`,
+    straightLine: "Línea recta (modo demo): la ruta real por las calles no se pudo calcular.",
+    isolinesNote: "Áreas punteadas: hasta dónde llegas caminando en 5, 10 y 15 min (Amazon Location, velocidad peatonal estándar).",
+    nearbyTitle: "Lugares frescos cerca según Amazon Location",
+    nearbyNone: "Amazon Location no encontró lugares de estas categorías a menos de 1.5 km.",
+    meters: (m) => (m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${Math.round(m)} m`),
+    noRefuge: "No hay un refugio a menos de 60 min a pie de este punto.",
+    outside: "Ese punto está fuera del área de estudio (la mancha urbana de la ciudad).",
+    notFound: "No encontramos esa dirección. Prueba con calle y colonia.",
+    searching: "Calculando…",
+    tooMany: "Llegaste al límite de búsquedas de esta visita (cuidamos el uso gratuito). Recarga la página para seguir.",
+    apiFailed: "Amazon Location no respondió; se muestran solo los datos abiertos.",
+    locating: "Pidiendo tu ubicación…",
+    noLocation: "No se pudo obtener tu ubicación.",
+    clear: "Limpiar",
+    nearbyCats: { shopping_mall: "Plaza", department_store: "Departamental", grocery: "Súper", library: "Biblioteca",
+                  museum: "Museo", "civic-community_center": "Centro comunitario", pharmacy: "Farmacia",
+                  drugstore: "Farmacia", drugstore_or_pharmacy: "Farmacia", convenience_store: "Conveniencia" },
     types: { plaza: "Plaza comercial", departamental: "Tienda departamental", super: "Supermercado",
              biblioteca: "Biblioteca", museo: "Museo", cultura: "Centro cultural",
              comunitario: "Centro comunitario / DIF", farmacia: "Farmacia", conveniencia: "Tienda de conveniencia" },
@@ -49,6 +71,28 @@ const TEXT = {
     proposalGain: (n) => `+${n} older adults would have a refuge within 10 min`,
     demo: "Demo mode: the Amazon Location API key is missing, so the base map is hidden. The data and figures are real.",
     langButton: "ES",
+    searchHere: "Calculate my walk from here",
+    from: "From",
+    nearestRefuge: "Nearest refuge",
+    onFootRoute: (min, km) => `${min} min on foot · Amazon Location route (${km} km)`,
+    openDataEstimate: (min) => `${min} according to the open-data map`,
+    straightLine: "Straight line (demo mode): the real street route could not be calculated.",
+    isolinesNote: "Dotted areas: how far you get on foot in 5, 10 and 15 min (Amazon Location, standard walking speed).",
+    nearbyTitle: "Cool places nearby according to Amazon Location",
+    nearbyNone: "Amazon Location found no places of these types within 1.5 km.",
+    meters: (m) => (m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${Math.round(m)} m`),
+    noRefuge: "There is no refuge within a 60-minute walk of this point.",
+    outside: "That point is outside the study area (the city's urban footprint).",
+    notFound: "We couldn't find that address. Try street and neighborhood.",
+    searching: "Calculating…",
+    tooMany: "You reached this visit's search limit (we protect the free usage). Reload the page to continue.",
+    apiFailed: "Amazon Location didn't answer; showing open data only.",
+    locating: "Asking for your location…",
+    noLocation: "Your location could not be obtained.",
+    clear: "Clear",
+    nearbyCats: { shopping_mall: "Mall", department_store: "Department store", grocery: "Grocery", library: "Library",
+                  museum: "Museum", "civic-community_center": "Community center", pharmacy: "Pharmacy",
+                  drugstore: "Pharmacy", drugstore_or_pharmacy: "Pharmacy", convenience_store: "Convenience" },
     types: { plaza: "Shopping mall", departamental: "Department store", super: "Supermarket",
              biblioteca: "Library", museo: "Museum", cultura: "Cultural center",
              comunitario: "Community center", farmacia: "Pharmacy", conveniencia: "Convenience store" },
@@ -153,11 +197,17 @@ async function addDataLayers() {
   if (map.getSource("hexes")) return; // already added for this style
   const data = await cityData;
   state.refuges = data.refuges.features;
+  state.stats = data.stats;
+  const hexes = hexagonsToGeoJSON(data.hex);
+  // Look-up table: H3 cell -> hexagon data, to answer "what about this exact point?" instantly
+  const col = data.hex.fields.indexOf("h");
+  state.hexByCell = new Map(data.hex.rows.map((row, i) => [row[col], hexes.features[i].properties]));
+  renderExamples(data.stats.zones.slice(0, 3));
 
   // Put the hexagons under the base map's labels, so street names stay readable
   const firstLabel = map.getStyle().layers.find((l) => l.type === "symbol")?.id;
 
-  map.addSource("hexes", { type: "geojson", data: hexagonsToGeoJSON(data.hex) });
+  map.addSource("hexes", { type: "geojson", data: hexes });
   map.addLayer({ id: "hexes", type: "fill", source: "hexes",
                  paint: { "fill-color": colorBy(state.mode), "fill-opacity": 0.78, "fill-outline-color": "rgba(255,255,255,0.25)" } },
                firstLabel);
@@ -206,13 +256,14 @@ function proposalHtml(p) {
 const hoverPopup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 8, className: "hover-popup" });
 let hoveredId = null;
 
-function hexHtml(p) {
+function hexHtml(p, lngLat = null) {
   const minutes = state.mode === "ref" ? p.ref : p.any;
   const idx = state.mode === "ref" ? p.iref : p.iany;
   const place = idx >= 0 ? state.refuges[idx]?.properties : null;
   const where = place ? `<p>${escapeHtml(place.n)} · ${t().types[place.t] || place.t}</p>` : "";
+  const button = lngLat ? `<button type="button" class="search-here" data-lon="${lngLat.lng}" data-lat="${lngLat.lat}">${t().searchHere}</button>` : "";
   return `<p class="pop-title">${t().minutes(minutes)} <span class="muted">${state.mode === "ref" ? t().toNearest : t().toNearestAny}</span></p>` +
-         where + `<p class="muted">${t().olderHere(fmt(p.pop60), fmt(p.pop))}</p>`;
+         where + `<p class="muted">${t().olderHere(fmt(p.pop60), fmt(p.pop))}</p>` + button;
 }
 
 map.on("mousemove", "hexes", (e) => {
@@ -242,7 +293,18 @@ map.on("click", (e) => {
     return;
   }
   const hex = map.queryRenderedFeatures(e.point, { layers: ["hexes"] })[0];
-  if (hex) new maplibregl.Popup({ offset: 8 }).setLngLat(e.lngLat).setHTML(hexHtml(hex.properties)).addTo(map);
+  if (hex) {
+    hoverPopup.remove();
+    new maplibregl.Popup({ offset: 8 }).setLngLat(e.lngLat).setHTML(hexHtml(hex.properties, e.lngLat)).addTo(map);
+  }
+});
+
+// The "Calculate my walk from here" button inside a hexagon's popup
+document.getElementById("map").addEventListener("click", (e) => {
+  const b = e.target.closest(".search-here");
+  if (!b) return;
+  document.querySelectorAll(".maplibregl-popup").forEach((p) => p.remove());
+  searchFrom([Number(b.dataset.lon), Number(b.dataset.lat)], null);
 });
 
 // ---------------------------------------------------------------- 5. Panel controls
@@ -299,6 +361,9 @@ async function switchCity(city) {
   const html = await fetch(`data/${city}/panel.html`).then((r) => r.text());
   document.getElementById("city-panel").innerHTML = html; // text made by render_html.py
   cityData = loadCity(city);
+  clearSearch();
+  if (originMarker) originMarker.remove();
+  document.getElementById("search-result").hidden = true;
   for (const id of ["hex-hover", "hexes", "refugios", "alivio"]) if (map.getLayer(id)) map.removeLayer(id);
   for (const id of ["hexes", "refuges"]) if (map.getSource(id)) map.removeSource(id);
   await addDataLayers();
@@ -320,7 +385,240 @@ function setSheet(open) {
 document.getElementById("sheet-handle").addEventListener("click", () =>
   setSheet(document.getElementById("panel").classList.contains("collapsed")));
 
-// ---------------------------------------------------------------- 6. Helpers
+// ---------------------------------------------------------------- 6. Personal search (Amazon Location, live)
+//
+// "Open data finds the gaps; Amazon Location guides the person."
+// From one origin, three calls run at the same time:
+//   CalculateIsolines -> the area reachable on foot in 5, 10 and 15 minutes
+//   CalculateRoutes   -> the walking route to the nearest refuge in OUR data (the hexagon's "iref")
+//   SearchNearby      -> cool places Amazon Location knows within 1.5 km
+// Results are drawn and then forgotten: nothing is stored (IntendedUse "SingleUse").
+
+const PLACES_API = `https://places.geo.${REGION}.amazonaws.com/v2`;
+const ROUTES_API = `https://routes.geo.${REGION}.amazonaws.com/v2`;
+const NEARBY_CATEGORIES = ["shopping_mall", "department_store", "grocery", "library", "museum",
+  "civic-community_center", "drugstore_or_pharmacy", "pharmacy", "drugstore", "convenience_store"];
+const MAX_SEARCHES = 30; // per page visit: a guard against accidental loops eating the free tier
+const DEBUG = params.has("debug"); // ?debug=1 shows how long each call took
+let searchCount = 0;
+let originMarker = null;
+let timings = [];
+
+// One Amazon Location call, timed. The API key goes in the URL, as the service expects.
+async function locationApi(base, path, body, label) {
+  const start = performance.now();
+  const response = await fetch(`${base}/${path}?key=${encodeURIComponent(API_KEY)}`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+  timings.push({ call: label, ms: Math.round(performance.now() - start), status: response.status });
+  if (!response.ok) throw new Error(`${label}: HTTP ${response.status}`);
+  return response.json();
+}
+
+const canUseApi = () => API_KEY && !usingDemo;
+
+async function geocode(text) {
+  const data = await locationApi(PLACES_API, "geocode", {
+    QueryText: text, BiasPosition: state.stats.center, Filter: { IncludeCountries: ["MEX"] },
+    Language: state.lang, MaxResults: 1,
+  }, "Geocode");
+  const item = data.ResultItems?.[0];
+  return item ? { position: item.Position, label: item.Address?.Label || item.Title } : null; // Position = [lon, lat]
+}
+
+// The main flow: from one point, show the walk to the nearest refuge
+async function searchFrom(lngLat, label) {
+  if (!state.hexByCell) return;
+  const [lon, lat] = lngLat;
+  clearSearch();
+  if (originMarker) originMarker.remove();
+  originMarker = new maplibregl.Marker({ color: "#0b0b0b" }).setLngLat(lngLat).addTo(map);
+
+  // 1) Our open-data answer, instantly: which hexagon is this, and which refuge is nearest?
+  const hex = state.hexByCell.get(h3.latLngToCell(lat, lon, 10));
+  if (!hex) return showResult(`<p>${t().outside}</p>`);
+  const refuge = hex.iref >= 0 ? state.refuges[hex.iref] : null;
+  if (!refuge) return showResult(`<p>${t().noRefuge}</p>`);
+  const destination = refuge.geometry.coordinates;
+
+  if (!canUseApi() || searchCount >= MAX_SEARCHES) {
+    drawRoute([lngLat, destination], true);
+    fitTo([lngLat, destination]);
+    return showResult(resultHtml({ label, refuge, hex, route: null, nearby: null,
+                                   note: searchCount >= MAX_SEARCHES ? t().tooMany : t().straightLine }));
+  }
+
+  // 2) Amazon Location, three calls in parallel
+  searchCount++;
+  showResult(`<p class="muted">${t().searching}</p>`);
+  const [iso, route, nearby] = await Promise.allSettled([
+    locationApi(ROUTES_API, "isolines", { Origin: lngLat, Thresholds: { Time: [300, 600, 900] },
+      TravelMode: "Pedestrian", IsolineGeometryFormat: "Simple" }, "CalculateIsolines"),
+    locationApi(ROUTES_API, "routes", { Origin: lngLat, Destination: destination, TravelMode: "Pedestrian",
+      TravelModeOptions: { Pedestrian: { Speed: 3.6 } }, LegGeometryFormat: "Simple" }, "CalculateRoutes"),
+    locationApi(PLACES_API, "search-nearby", { QueryPosition: lngLat, QueryRadius: 1500, MaxResults: 20,
+      Filter: { IncludeCategories: NEARBY_CATEGORIES }, Language: state.lang }, "SearchNearby"),
+  ]);
+
+  const points = [lngLat, destination];
+  if (iso.status === "fulfilled") points.push(...drawIsolines(iso.value));
+  let routeInfo = null;
+  if (route.status === "fulfilled") {
+    const legs = route.value.Routes?.[0]?.Legs || [];
+    const line = legs.flatMap((leg) => leg.Geometry?.LineString || []);
+    const sum = (key) => legs.reduce((s, leg) => s + (leg.PedestrianLegDetails?.Summary?.Overview?.[key] || 0), 0);
+    drawRoute(line.length ? line : [lngLat, destination], !line.length);
+    routeInfo = { seconds: sum("Duration"), meters: sum("Distance") };
+  } else {
+    drawRoute([lngLat, destination], true);
+  }
+  const places = nearby.status === "fulfilled" ? (nearby.value.ResultItems || []) : null;
+  if (places) drawNearby(places);
+  const failed = [iso, route, nearby].some((r) => r.status === "rejected");
+  fitTo(points);
+  showResult(resultHtml({ label, refuge, hex, route: routeInfo, nearby: places, note: failed ? t().apiFailed : "" }));
+  if (DEBUG) console.table(timings);
+}
+
+function resultHtml({ label, refuge, hex, route, nearby, note }) {
+  const p = refuge.properties;
+  const lines = [];
+  if (label) lines.push(`<p class="pop-kicker">${t().from}: ${escapeHtml(label)}</p>`);
+  lines.push(`<p class="muted small">${t().nearestRefuge}</p><p class="result-main">${escapeHtml(p.n)} <span class="muted">· ${t().types[p.t] || p.t}</span></p>`);
+  if (route) lines.push(`<p><strong>${t().onFootRoute(Math.round(route.seconds / 60), (route.meters / 1000).toFixed(1))}</strong></p>`);
+  lines.push(`<p class="muted">${t().openDataEstimate(t().minutes(hex.ref))}</p>`);
+  if (note) lines.push(`<p class="note">${note}</p>`);
+  if (route) lines.push(`<p class="small">${t().isolinesNote}</p>`);
+  if (nearby) {
+    const items = nearby.slice(0, 5).map((it) => {
+      const cat = it.Categories?.[0]?.Id;
+      return `<li>${escapeHtml(it.Title)} <span class="muted">· ${t().nearbyCats[cat] || cat || ""} · ${t().meters(it.Distance)}</span></li>`;
+    }).join("");
+    lines.push(`<h3>${t().nearbyTitle}</h3>` + (items ? `<ul class="nearby">${items}</ul>` : `<p class="muted">${t().nearbyNone}</p>`));
+  }
+  if (DEBUG && timings.length) {
+    lines.push(`<p class="small muted">${timings.map((x) => `${x.call} ${x.ms} ms (${x.status})`).join(" · ")}</p>`);
+  }
+  lines.push(`<button type="button" id="search-clear" class="link-button">${t().clear}</button>`);
+  return lines.join("");
+}
+
+// ---- drawing helpers (each search replaces the previous drawing)
+
+function setGeoJSON(id, features, addLayers) {
+  const data = { type: "FeatureCollection", features };
+  if (map.getSource(id)) map.getSource(id).setData(data);
+  else { map.addSource(id, { type: "geojson", data }); addLayers(); }
+}
+
+function drawIsolines(response) {
+  const features = (response.Isolines || []).map((iso) => ({
+    type: "Feature", properties: { minutes: Math.round((iso.TimeThreshold || 0) / 60) },
+    geometry: { type: "MultiPolygon", coordinates: (iso.Geometries || []).map((g) => g.Polygon) },
+  }));
+  setGeoJSON("isolines", features, () => {
+    // One line style per threshold: 5 min solid, 10 min dashed, 15 min dotted
+    const styles = { 5: { width: 3, dash: null }, 10: { width: 2.2, dash: [3, 2] }, 15: { width: 1.8, dash: [1, 2] } };
+    for (const [minutes, s] of Object.entries(styles)) {
+      const paint = { "line-color": "#0b0b0b", "line-width": s.width };
+      if (s.dash) paint["line-dasharray"] = s.dash;
+      map.addLayer({ id: `isoline-${minutes}`, type: "line", source: "isolines",
+                     filter: ["==", ["get", "minutes"], Number(minutes)], paint });
+    }
+  });
+  map.setPaintProperty("hexes", "fill-opacity", 0.45); // dim the grid so the walk stands out
+  return features.flatMap((f) => f.geometry.coordinates.flat(2)).filter((_, i) => i % 10 === 0);
+}
+
+function drawRoute(line, straight) {
+  const feature = { type: "Feature", properties: { straight }, geometry: { type: "LineString", coordinates: line } };
+  setGeoJSON("route", [feature], () => {
+    map.addLayer({ id: "route-casing", type: "line", source: "route", layout: { "line-cap": "round", "line-join": "round" },
+                   paint: { "line-color": "#ffffff", "line-width": 7 } });
+    map.addLayer({ id: "route", type: "line", source: "route", layout: { "line-cap": "round", "line-join": "round" },
+                   paint: { "line-color": "#eb6834", "line-width": 4 } });
+  });
+  // A straight line (demo mode) is dashed so nobody mistakes it for a real street route
+  map.setPaintProperty("route", "line-dasharray", straight ? [2, 2] : null);
+}
+
+function drawNearby(items) {
+  const features = items.map((it) => ({ type: "Feature", properties: { title: it.Title, cat: it.Categories?.[0]?.Id || "" },
+                                        geometry: { type: "Point", coordinates: it.Position } }));
+  setGeoJSON("nearby", features, () => {
+    map.addLayer({ id: "nearby", type: "circle", source: "nearby",
+      paint: { "circle-radius": 5, "circle-color": "#1baf7a", "circle-stroke-color": "#ffffff", "circle-stroke-width": 1.5 } });
+    map.on("click", "nearby", (e) => {
+      const p = e.features[0].properties;
+      new maplibregl.Popup({ offset: 8 }).setLngLat(e.lngLat)
+        .setHTML(`<p class="pop-kicker">Amazon Location</p><p class="pop-title">${escapeHtml(p.title)}</p><p class="muted">${t().nearbyCats[p.cat] || p.cat}</p>`).addTo(map);
+    });
+  });
+}
+
+function fitTo(points) {
+  const bounds = points.reduce((b, p) => b.extend(p), new maplibregl.LngLatBounds(points[0], points[0]));
+  map.fitBounds(bounds, { padding: 60, maxZoom: 16, duration: 900 });
+}
+
+function clearSearch() {
+  timings = [];
+  for (const id of ["isolines", "route", "nearby"]) {
+    if (map.getSource(id)) map.getSource(id).setData({ type: "FeatureCollection", features: [] });
+  }
+  if (map.getLayer("hexes")) map.setPaintProperty("hexes", "fill-opacity", 0.78);
+}
+
+function showResult(html) {
+  const box = document.getElementById("search-result");
+  box.innerHTML = html;
+  box.hidden = false;
+}
+
+// ---- the three ways to start a search
+
+document.getElementById("search-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const text = document.getElementById("address").value.trim();
+  if (!text) return;
+  if (!canUseApi() || searchCount >= MAX_SEARCHES) return showResult(`<p class="note">${canUseApi() ? t().tooMany : t().demo}</p>`);
+  showResult(`<p class="muted">${t().searching}</p>`);
+  searchCount++;
+  try {
+    const found = await geocode(text);
+    if (!found) return showResult(`<p>${t().notFound}</p>`);
+    await searchFrom(found.position, found.label);
+  } catch (err) {
+    console.warn(err);
+    showResult(`<p class="note">${t().apiFailed}</p>`);
+  }
+});
+
+document.getElementById("locate").addEventListener("click", () => {
+  if (!navigator.geolocation) return showResult(`<p>${t().noLocation}</p>`);
+  showResult(`<p class="muted">${t().locating}</p>`);
+  navigator.geolocation.getCurrentPosition( // only when the button is pressed; never stored
+    (pos) => searchFrom([pos.coords.longitude, pos.coords.latitude], null),
+    () => showResult(`<p>${t().noLocation}</p>`),
+    { enableHighAccuracy: true, timeout: 10000 });
+});
+
+function renderExamples(zones) {
+  document.getElementById("examples").innerHTML = zones.map((z) =>
+    `<button type="button" class="chip" data-lon="${z.lon}" data-lat="${z.lat}">${escapeHtml((z.name || "").split(" / ")[0])}</button>`).join("");
+}
+document.getElementById("examples").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-lon]");
+  if (b) searchFrom([Number(b.dataset.lon), Number(b.dataset.lat)], b.textContent);
+});
+document.getElementById("search-result").addEventListener("click", (e) => {
+  if (e.target.id !== "search-clear") return;
+  clearSearch();
+  if (originMarker) originMarker.remove();
+  document.getElementById("search-result").hidden = true;
+});
+
+// ---------------------------------------------------------------- 7. Helpers
 
 function showNotice(text) {
   const el = document.getElementById("notice");

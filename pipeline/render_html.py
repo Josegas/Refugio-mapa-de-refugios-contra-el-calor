@@ -84,11 +84,12 @@ def panel(s):
         + both("adultos mayores (60+) viven a más de 15 minutos a pie del refugio fresco más cercano.",
                "older adults (60+) live more than a 15-minute walk from the nearest cool refuge.")
         + '</p><p class="hero-sub">'
-        + both(f"Son el {pct(far, tot60)} de los {num(tot60)} adultos mayores de la ciudad. "
-               f"Si también cuentan las farmacias y tiendas de conveniencia, quedan {num(far_any)} "
-               f"({pct(far_any, tot60)}).",
-               f"That is {pct(far, tot60)} of the city's {num(tot60)} older adults. Counting pharmacies "
-               f"and convenience stores too, {num(far_any)} ({pct(far_any, tot60)}) remain that far.")
+        + both(f"Según los datos abiertos de Overture Maps, son el {pct(far, tot60)} de los {num(tot60)} "
+               f"adultos mayores de la ciudad. Si también cuentan las farmacias y tiendas de conveniencia, "
+               f"quedan {num(far_any)} ({pct(far_any, tot60)}).",
+               f"According to Overture Maps open data, that is {pct(far, tot60)} of the city's {num(tot60)} "
+               f"older adults. Counting pharmacies and convenience stores too, {num(far_any)} "
+               f"({pct(far_any, tot60)}) remain that far.")
         + "</p>")
     out.append(bar(s["map_bands"]["refugio"], tot60, "ref", hidden=False))
     out.append(bar(s["map_bands"]["any"], tot60, "any", hidden=True))
