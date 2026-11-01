@@ -1,0 +1,12 @@
+# Secret scanning rules for gitleaks (used by the CI workflow).
+# Keep all of gitleaks' built-in rules (AWS keys, GitHub tokens, private keys...) and add one:
+[extend]
+useDefault = true
+
+# Amazon Location Service API keys look like "v1.public.<long token>". They are meant to be used in
+# browsers, but they must never be committed: config.js is generated at deploy time instead.
+[[rules]]
+id = "amazon-location-api-key"
+description = "Amazon Location Service API key"
+regex = '''v1\.public\.[A-Za-z0-9._\-]{20,}'''
+keywords = ["v1.public."]

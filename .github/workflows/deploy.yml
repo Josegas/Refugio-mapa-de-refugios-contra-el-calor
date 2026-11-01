@@ -1,0 +1,62 @@
+# CD: publish the site on AWS Amplify every time main changes, but only if every check passes.
+#
+#   push to main ──> checks (ci.yml: tests, secret scan, Terraform) ──> deploy ──> smoke test
+#
+# AWS access uses OIDC: GitHub hands this job a short-lived token, AWS trades it for temporary
+# credentials of the role refugio-github-deploy (infra/github_oidc.tf). No AWS keys are stored here.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # adds a "Run workflow" button in the Actions tab
+
+# Never run two deployments at the same time; a newer one waits for the current one to finish
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml # the same checks that run on pull requests
+
+  deploy:
+    needs: checks # if any check fails, nothing is published
+    runs-on: ubuntu-latest
+    environment:
+      name: production # must match the role's trust policy; GitHub keeps a deployment history
+      url: ${{ steps.publish.outputs.site_url }}
+    permissions:
+      contents: read
+      id-token: write # allows the job to request the OIDC token
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v7
+
+      - name: Get temporary AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-west-2
+
+      - name: Publish web/ to Amplify
+        id: publish
+        run: ./deploy/deploy.sh
+        env:
+          AMPLIFY_APP_ID: ${{ vars.AMPLIFY_APP_ID }}
+
+      - name: Smoke test (the live site answers and shows the figures without JavaScript)
+        env:
+          SITE_URL: ${{ steps.publish.outputs.site_url }}
+        run: |
+          for attempt in 1 2 3 4 5 6; do
+            if curl -fsS "$SITE_URL/" | grep -q 'class="hero-num"'; then break; fi
+            echo "Not ready yet (attempt $attempt), retrying in 10 s"; sleep 10
+          done
+          curl -fsS "$SITE_URL/" | grep -q 'class="hero-num"'
+          curl -fsS -o /dev/null "$SITE_URL/data/culiacan/hex.json"
+          curl -fsS "$SITE_URL/config.js" | grep -q "apiKey: 'v1.public."
+          echo "Live and healthy: $SITE_URL"
