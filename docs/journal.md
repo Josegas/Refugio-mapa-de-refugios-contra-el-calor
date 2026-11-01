@@ -105,3 +105,23 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
   - Pasó: OIDC y la lectura de la key ya funcionaban, pero AWS revisó `CreateDeployment` sobre `.../branches/main/deployments/*`. La documentación del servicio solo menciona la rama, así que la política solo daba permiso sobre la rama.
   - Cómo lo supe: el mensaje de AccessDenied dice la acción y el recurso exactos.
   - Decidí: agregar solo esas rutas (`deployments/*` y `jobs/*` de la rama main). El mínimo privilegio se ajusta con evidencia, no dando permisos de más.
+
+**2026-10-31 18:40 · App en vivo y búsqueda personal con Amazon Location**
+- Pasó: el deploy salió en verde en 45 s. El sitio carga en 0.11 s desde CloudFront, `hex.json` viaja comprimido (83 KB en vez de 326 KB) y los 3 headers de seguridad están activos. `curl` del sitio muestra la cifra principal sin JavaScript.
+- Primero verifiqué con llamadas reales la forma de las respuestas:
+  - Geocode devuelve `Position` como `[lon, lat]`.
+  - Las isolíneas vienen en `Isolines[].Geometries[].Polygon`.
+  - La ruta viene en `Legs[].Geometry.LineString`, con duración y distancia en `PedestrianLegDetails.Summary.Overview`. La velocidad de 3.6 km/h sí se respeta: 1,626 m en 1,641 s.
+- Latencias medidas (`?debug=1`): SearchNearby 486 ms, CalculateIsolines 810 ms, CalculateRoutes 986 ms. Las tres corren en paralelo, así que una búsqueda tarda alrededor de 1 s. Geocode tarda 383 ms.
+- Primeras comparaciones contra la ruta real de Amazon Location:
+
+  | Zona | Datos abiertos | Amazon Location |
+  |---|---|---|
+  | Díaz Ordaz | 30 min | 27 min |
+  | Alturas del Sur | 12 min | 10 min |
+
+  En los dos casos nuestro mapa es algo conservador, porque se mide hasta la esquina más cercana. La validación de 50 puntos dará la cifra completa.
+- Hallazgo: en Díaz Ordaz, Amazon Location encuentra "Plaza Sur" a 382 m, pero en Overture esa plaza no existe como `shopping_mall` (solo algunas tiendas que están dentro). Además "Maxi Tours" viene como `shopping_mall` con 93% de confianza.
+- Decidí:
+  - La cifra principal ahora dice "según los datos abiertos de Overture Maps".
+  - Antes de la entrega: spot-check de refugios, lista documentada de falsos positivos, y medir el hueco con SearchNearby en 50 hexágonos (solo se guarda el porcentaje).
