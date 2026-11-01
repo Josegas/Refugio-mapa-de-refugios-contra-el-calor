@@ -1,0 +1,12 @@
+[
+ {
+  "id": "culiacan",
+  "city": "Culiacán",
+  "state": "Sinaloa",
+  "center": [
+   -107.394,
+   24.799
+  ],
+  "zoom": 12.2
+ }
+]

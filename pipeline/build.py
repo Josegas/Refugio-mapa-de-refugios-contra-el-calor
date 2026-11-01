@@ -274,15 +274,19 @@ def name_points(points, hoods, max_deg=0.003):
 
 # ----------------------------------------------------------------------------- main
 
-def band_stats(minutes, pop, pop60):
+MAP_BANDS_MIN = (5, 10, 15, 20)  # the 5 color classes of the web map: <=5, 5-10, 10-15, 15-20, >20
+
+
+def band_stats(minutes, pop, pop60, thresholds=THRESHOLDS_MIN):
+    """People per walking-time band, e.g. {"le5": {...}, "le10": {...}, ..., "gt15": {...}}."""
     out = {}
     lo = 0
-    for t in THRESHOLDS_MIN:
+    for t in thresholds:
         m = (minutes > lo) & (minutes <= t) if lo else (minutes <= t)
         out[f"le{t}"] = {"pop": round(float(pop[m].sum())), "pop60": round(float(pop60[m].sum()))}
         lo = t
-    m = minutes > THRESHOLDS_MIN[-1]
-    out[f"gt{THRESHOLDS_MIN[-1]}"] = {"pop": round(float(pop[m].sum())), "pop60": round(float(pop60[m].sum()))}
+    m = minutes > thresholds[-1]
+    out[f"gt{thresholds[-1]}"] = {"pop": round(float(pop[m].sum())), "pop60": round(float(pop60[m].sum()))}
     return out
 
 
@@ -367,6 +371,8 @@ def build(city_id):
             covers[ci] = np.nonzero(tot[j] <= cover_m)[0]
     weight = np.where(m_ref > COVER_MIN, pop60, 0.0)
     weight_pop = np.where(m_ref > COVER_MIN, pop, 0.0)
+    covered60 = float(pop60[m_ref <= COVER_MIN].sum())
+    curve = [round(100 * covered60 / float(pop60.sum()), 1)]  # % of 60+ within 10 min after 0, 1, 2... sites
     proposals = []
     for rank in range(1, N_PROPOSALS + 1):
         if not covers:
@@ -381,6 +387,8 @@ def build(city_id):
         weight[covers[ci]] = 0
         weight_pop[covers[ci]] = 0
         del covers[ci]
+        covered60 += gain
+        curve.append(round(100 * covered60 / float(pop60.sum()), 1))
     new60 = sum(p["new_pop60"] for p in proposals)
     newp = sum(p["new_pop"] for p in proposals)
 
@@ -446,10 +454,15 @@ def build(city_id):
         "population": {"total": round(totp), "pop60": round(tot60), "dropped_far_from_streets": round(dropped_pop)},
         "access_refugio": band_stats(m_ref, pop, pop60),
         "access_any": band_stats(m_any, pop, pop60),
+        # Same people, split in the 5 color classes of the web map (the panel's stacked bar)
+        "map_bands": {"thresholds_min": MAP_BANDS_MIN,
+                      "refugio": band_stats(m_ref, pop, pop60, MAP_BANDS_MIN),
+                      "any": band_stats(m_any, pop, pop60, MAP_BANDS_MIN)},
         "zones": zones[:10],
         "proposals": {"n": len(proposals), "new_pop60": new60, "new_pop": newp,
                       "pct60_le10_before": round(100 * le10_60 / tot60, 1),
-                      "pct60_le10_after": round(100 * (le10_60 + new60) / tot60, 1)},
+                      "pct60_le10_after": round(100 * (le10_60 + new60) / tot60, 1),
+                      "coverage_curve_pct60": curve},
     }
     (out / "stats.json").write_text(json.dumps(stats, ensure_ascii=False, indent=1))
     print(json.dumps({k: stats[k] for k in ("counts", "population", "access_refugio", "access_any", "proposals", "network")},

@@ -68,3 +68,22 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
 - Pasó: falló en 28 hexágonos. El Dijkstra multi-origen elegía el refugio con la esquina más cercana sin contar los metros de la puerta a la esquina (hasta 300 m), y esos metros se sumaban después. Al agregar más lugares, a veces ganaba uno con la esquina cerca pero la puerta lejos.
 - Cómo lo supe: el test `test_relief_never_makes_access_worse` en `pipeline/tests/test_outputs.py`.
 - Decidí: un nodo virtual conectado a la esquina de cada refugio, con una arista del largo de esa caminata puerta–esquina. Un solo Dijkstra desde ahí da la distancia a la puerta realmente más cercana. Los 30 tests pasan. Las cifras casi no cambian: siguen siendo 17,039 adultos 60+ (30.7%) a más de 15 min.
+
+**2026-10-31 16:20 · App web (MVP) y colores del mapa**
+- Intenté: 6 rangos de color para los minutos a pie (≤5, 5–10, 10–15, 15–20, 20–30, >30), como decía el plan.
+- Pasó: el validador de paletas mostró que en una rampa de un solo tono (azul) los dos rangos más oscuros no se distinguen (ΔL 0.047, el mínimo es 0.06).
+- Cómo lo supe: `validate_palette.js --ordinal`.
+- Decidí:
+  - **5 rangos** (≤5, 5–10, 10–15, 15–20, >20 min) con azules que pasan todas las pruebas de contraste y daltonismo. El minuto exacto aparece en el tooltip.
+  - El filtro "dónde viven adultos mayores" oculta los hexágonos con menos de 10 personas de 60+, en lugar de cambiar la transparencia: así los colores no mienten. Ese filtro deja el 29% de los hexágonos, donde vive el 69% de los adultos mayores.
+  - El texto del panel (cifras, zonas, propuestas) lo escribe `pipeline/render_html.py` desde `stats.json`, en español e inglés, para que se lea sin JavaScript.
+  - Librerías fijadas con hash de integridad (SRI): MapLibre GL JS 5.24.0 y h3-js 4.5.0. MapLibre 6 ya solo se distribuye como módulo ES y no tiene archivo único, así que se descartó por esta noche.
+  - Un solo nombre para la key en el navegador: `web/config.js`, ignorado por git. En la laptop lleva la key local y en el deploy la de producción.
+- Pendiente: el refugio "Maxi Tours" aparece como plaza comercial; parece un error de categoría en Overture. Va al spot-check (§6.5).
+
+**2026-10-31 16:40 · CI/CD**
+- Decidí:
+  - `ci.yml` corre tests, gitleaks y Terraform fmt/validate en cada pull request.
+  - `deploy.yml` reutiliza `ci.yml` y solo publica si todo pasa. El deploy usa OIDC (rol `refugio-github-deploy`), lee la key de producción en el momento y termina con un smoke test con `curl`.
+  - Regla propia de gitleaks para keys `v1.public.`: el historial está limpio y la regla detecta una key falsa.
+  - actionlint: sin errores.
