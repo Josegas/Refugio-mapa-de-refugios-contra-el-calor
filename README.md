@@ -30,7 +30,7 @@ data). Across the three cities, 52,542 are.
 - **Planning layer** (precomputed, 100% open data): walking minutes from every H3 hexagon to the nearest refuge
   (mall, department store, large supermarket, library, museum, cultural or community center), where older
   adults live, the areas where refuges are missing, and 10 existing public buildings that would bring the most
-  older adults within 10 minutes (Culiacán: from 40.7% to 51.6%).
+  older adults within 10 minutes (Culiacán: from 40.7% to 51.4%).
 - **Personal layer** (live, Amazon Location Service): from an address, a tap or your location, the area you can
   reach on foot in 5, 10 and 15 minutes, the walking route to the nearest refuge, and cool places nearby.
 
@@ -82,7 +82,7 @@ sequenceDiagram
 **Design principle: open data finds the gaps; Amazon Location guides the person.** The citywide layer comes only
 from open data, so anyone can recompute it. Amazon Location results are used once (`SingleUse`) and never stored.
 
-![Pipeline diagram for Culiacán: 28,002 places become 211 refuges; 49,024 road segments become 57,276 street edges; 90,767 populated pixels become 6,932 hexagons; 197 candidate buildings become 10 proposals](docs/assets/k2_pipeline.png)
+![Pipeline diagram for Culiacán: 28,002 places become 211 refuges; 49,024 road segments become 57,276 street edges; 90,767 populated pixels become 6,932 hexagons; 196 candidate buildings become 10 proposals](docs/assets/k2_pipeline.png)
 
 | Service | Used for |
 |---|---|
@@ -98,9 +98,10 @@ from open data, so anyone can recompute it. Amazon Location results are used onc
 | Check | Result |
 |---|---|
 | Open-data walking minutes vs Amazon Location `CalculateRoutes`, 50 random hexagons | Median difference 0.5 min; 94% within ±2 min; correlation 0.99 |
-| Places Overture is missing | Amazon Location knows a refuge-type place clearly closer in 10% of those hexagons, so the headline is an upper bound |
+| Places Overture is missing | Amazon Location knows a refuge-type place clearly closer in 10% of those hexagons, so the share far from a refuge is probably somewhat lower |
 | Spot-check of 15 random refuges | 10 found by name within 300 m, 8 with a compatible category |
 | Street network realism | Walking along streets is a median 1.24 times the straight line in Culiacán |
+| Older adults: HRSL vs INEGI 2020 census | HRSL: 7.7% of Culiacán is 60+; census: 10.9%. Counts are probably low; shares hold if the gap is even ([pipeline/census.py](pipeline/census.py)) |
 
 Details: [docs/validation.md](docs/validation.md). Development journal, with every decision and mistake:
 [docs/journal.md](docs/journal.md).
@@ -118,8 +119,9 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r pipeline/requirements-dev.txt
 python pipeline/fetch.py culiacan      # ~35 s: reads only the city's bounding box from Amazon S3
 python pipeline/build.py culiacan      # ~2 s: writes web/data/culiacan/
+python pipeline/census.py              # compares the 60+ share with INEGI's 2020 census
 python pipeline/render_html.py         # writes the page text, about.html and llms.txt from stats.json
-pytest pipeline/tests                  # 45 tests
+pytest pipeline/tests                  # 47 tests
 ```
 
 Cities are configured in `pipeline/cities.py` (`hermosillo` and `mexicali` work the same way).
@@ -169,8 +171,8 @@ python docs/diagrams/render.py                               # K1-K3 (downloads 
 
 ## Limitations
 
-Air conditioning and free entry are assumed from the type of place; Overture doesn't list every place; the HRSL
-60+ layer's census year isn't documented; shade, sidewalks, safety and opening hours aren't modeled; the walking
+Air conditioning and free entry are assumed from the type of place; Overture doesn't list every place; HRSL
+counts about 30% fewer people aged 60+ than the 2020 census; shade, sidewalks, safety and opening hours aren't modeled; the walking
 speed (3.6 km/h) is an assumption, and Amazon Location isolines use the service's default pedestrian speed.
 
 ## Data sources and licenses

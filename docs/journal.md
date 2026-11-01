@@ -195,3 +195,15 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
 - **README en inglés:** refleja el artículo, con dos diagramas Mermaid (arquitectura y secuencia de una búsqueda). Los dibujé con mermaid 11 antes de subirlos para comprobar que no salen rotos en GitHub.
 - **`docs/writeup.md`:** borrador del artículo con las 12 secciones de CLAUDE.md §9.1 (el "Try it in 1 minute" va como caja al inicio), ~2,000 palabras de texto más tablas. Quedan `TODO(José)` para tu historia, "What I learned" y el link del video.
 - **`docs/video-script.md` y `docs/video-subtitles.en.srt`:** guion de 2:55 con narración en español, qué mostrar en cada segmento y la checklist de las reglas (URL visible, sin marcas, sin otras apps, sin música).
+
+**2026-11-01 02:00 · Población 60+ contra el censo y dos propuestas dudosas**
+- **60+ contra INEGI:** HRSL da 7.7% de población de 60+ en Culiacán (7.8% en Hermosillo y 7.9% en Mexicali). Parecía bajo, así que lo comparé con el censo 2020.
+  - Cómo lo supe: el archivo ITER 2020 de INEGI (resultados por localidad, columnas `POBTOT` y `P_60YMAS`) da 10.9% en la ciudad de Culiacán, 11.4% en Hermosillo y 11.4% en Mexicali. HRSL cuenta unos 30% menos adultos mayores en las tres.
+  - Decidí: mantener HRSL, porque es el que dice *dónde* vive la gente, y reportar la diferencia con números. `pipeline/census.py` escribe la comparación en `stats.json` y en `docs/validation.md` (sección 4). Si el faltante es parejo, los porcentajes del mapa no cambian, pero el conteo sí: los 17,441 serían unos 24,700 con la proporción del censo.
+  - Ojo con la redacción: esto empuja en sentido contrario al hueco de Overture. Los lugares que le faltan a Overture hacen que el *porcentaje* lejos de un refugio se vea más alto de lo real; el censo dice que el *número* de adultos mayores es mayor.
+  - Hay que correr `census.py` después de `build.py`, porque `build.py` reescribe `stats.json`.
+- **Dos propuestas dudosas:** "Primaria Ovidio Decroly" (Culiacán) y "Ecos Preescolar y Primaria" (Mexicali).
+  - Cómo lo supe: ni en la web ni en Overture encontré si son públicas; solo hay páginas de Facebook y, en el caso de Ecos, un correo de Hotmail. Las señales apuntan a privadas: Ecos tiene nombre de marca y junta preescolar y primaria en un solo plantel, y "Decroly" es el nombre de un método pedagógico que usan colegios privados.
+  - Decidí: excluirlas con una lista documentada (`NOT_CANDIDATES`) y dos tests nuevos (ahora son 47). Es preferible perder una escuela pública por error que proponer una privada como edificio público.
+  - Resultado: en Culiacán la cobertura a ≤10 min con 10 propuestas pasa de 40.7% a **51.4%** (+5,959); antes 51.6%. Mexicali queda en 51.9%. Regeneré los diagramas, las gráficas y los textos.
+  - Pendiente: volver a tomar las capturas (K4, K5 y `og.png`) después del deploy, porque todavía muestran las propuestas viejas.

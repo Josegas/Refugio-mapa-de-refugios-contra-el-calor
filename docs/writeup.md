@@ -57,17 +57,19 @@ The dark patches in the south and southwest are where refuges are missing. Data:
 - **The headline.** In Culiacán, **17,441 older adults (60+), 31.4% of the 55,485 who live in the city, are more
   than a 15-minute walk from the nearest refuge.** Counting pharmacies and convenience stores, where you can step
   in for a moment and buy water, 1,790 (3.2%) remain that far.
+  The counts come from Meta's HRSL, which has about 30% fewer people aged 60+ than Mexico's 2020 census,
+  so the real number is probably higher (about 24,700 with the census share; see Evidence).
 - **Where refuges are missing.** The areas with the most older adults more than 15 minutes away, ranked. The
   first, Díaz Ordaz / Libertad, has 6,006 older adults with a median walk of 21 minutes.
 - **Which buildings could open as refuges.** Ten existing public buildings (all public schools in Culiacán) that
-  would take the share of older adults within a 10-minute walk from **40.7% to 51.6%** (+6,085 people).
+  would take the share of older adults within a 10-minute walk from **40.7% to 51.4%** (+5,959 people).
 - **From your own home.** Type an address, tap the map or use your location. Amazon Location Service draws the
   area you can reach on foot in 5, 10 and 15 minutes, the walking route to the nearest refuge, and the cool
   places it knows nearby.
 - **Three cities, two languages, any screen.** Culiacán, Hermosillo and Mexicali, in Spanish and English, on a
   desktop or a phone.
 
-![Animation: typing "Colonia Libertad, Culiacán" in the search box; the map zooms in and draws the 5, 10 and 15-minute walking areas and an orange walking route to the science museum, 26 minutes away](assets/k5_search.gif)
+![Animation: typing the address Colonia Libertad, Culiacán in the search box; the map zooms in and draws the 5, 10 and 15-minute walking areas and an orange walking route to the science museum, 26 minutes away](assets/k5_search.gif)
 *A personal search with Amazon Location: the 15-minute walking area (dotted) doesn't reach the nearest refuge.*
 
 ![Phone screenshot: the map with the walking areas and the route at the top, and the result panel below naming the science museum, 26 minutes on foot](assets/k4_mobile_search.png)
@@ -77,12 +79,12 @@ The dark patches in the south and southwest are where refuges are missing. Data:
 
 Both datasets come from the [Registry of Open Data on AWS](https://registry.opendata.aws/), in Amazon S3.
 
-| Dataset | What I use | Version | License |
-|---|---|---|---|
-| [Overture Maps](https://registry.opendata.aws/overture/) places | Places with category, brand and confidence: 28,002 in Culiacán's bounding box | Release 2026-10-21.0 | CDLA Permissive 2.0, Apache 2.0, CC0 (by source) |
-| Overture Maps transportation | 49,024 road segments with their connectors: the walking network | Release 2026-10-21.0 | ODbL, © OpenStreetMap contributors |
-| Overture Maps divisions | The city limit (Culiacán) and neighborhood names | Release 2026-10-21.0 | ODbL, © OpenStreetMap contributors |
-| [Meta HRSL](https://registry.opendata.aws/dataforgood-fb-hrsl/), general and elderly 60+ | Population, total and aged 60+, at about 30 m | Latest | CC BY 4.0, Meta and CIESIN – Columbia University |
+| Dataset                                                                                 | What I use                                                                     | Version              | License                                           |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | -------------------- | ------------------------------------------------- |
+| [Overture Maps](https://registry.opendata.aws/overture/) places                          | Places with category, brand and confidence: 28,002 in Culiacán's bounding box | Release 2026-10-21.0 | CDLA Permissive 2.0, Apache 2.0, CC0 (by source)  |
+| Overture Maps transportation                                                            | 49,024 road segments with their connectors: the walking network                | Release 2026-10-21.0 | ODbL, © OpenStreetMap contributors               |
+| Overture Maps divisions                                                                 | The city limit (Culiacán) and neighborhood names                              | Release 2026-10-21.0 | ODbL, © OpenStreetMap contributors               |
+| [Meta HRSL](https://registry.opendata.aws/dataforgood-fb-hrsl/), general and elderly 60+ | Population, total and aged 60+, at about 30 m                                  | Latest               | CC BY 4.0, Meta and CIESIN – Columbia University |
 
 Only each city's bounding box is read, with HTTP range requests on GeoParquet and Cloud-Optimized GeoTIFF files,
 so Culiacán downloads in 34 seconds instead of pulling global files. No AWS account is needed for this step.
@@ -98,7 +100,7 @@ One region, us-west-2. No servers to run.*
 1. **Read from S3.** DuckDB queries Overture's GeoParquet by bounding box; rasterio reads only the needed window
    of the HRSL rasters.
 2. **Classify places.** Categories and names (including chain brands) decide what is a refuge (211 in Culiacán), a quick stop (366
-   pharmacies and convenience stores) or a candidate public building (197). A documented list removes clear
+   pharmacies and convenience stores) or a candidate public building (196). A documented list removes clear
    mistakes.
 3. **Walking network.** 49,024 road segments become 39,069 intersections and 57,276 street edges (4,567 km).
 4. **Population on H3.** 90,767 populated pixels are summed into 6,932 hexagons.
@@ -106,7 +108,7 @@ One region, us-west-2. No servers to run.*
 6. **Proposals.** A greedy maximum-coverage algorithm picks the public buildings that bring the most older
    adults within 10 minutes.
 
-![Pipeline diagram for Culiacán in five rows. Places: 28,002 places become 211 refuges, 366 quick stops and 197 candidates. Streets: 49,024 segments become 39,069 intersections and 57,276 edges. People: 90,767 populated pixels become 6,932 hexagons with 723,131 people. Walk: 17,441 older adults more than 15 minutes away. Propose: 10 proposals, from 40.7% to 51.6%](assets/k2_pipeline.png)
+![Pipeline diagram for Culiacán in five rows. Places: 28,002 places become 211 refuges, 366 quick stops and 196 candidates. Streets: 49,024 segments become 39,069 intersections and 57,276 edges. People: 90,767 populated pixels become 6,932 hexagons with 723,131 people. Walk: 17,441 older adults more than 15 minutes away. Propose: 10 proposals, from 40.7% to 51.4%](assets/k2_pipeline.png)
 *What goes in and out of each stage for Culiacán: 34 s to download, 2.1 s to compute on a laptop.*
 
 The query that reads Overture places straight from S3 (`pipeline/fetch.py`):
@@ -139,14 +141,14 @@ const [iso, route, nearby] = await Promise.allSettled([
 ]);
 ```
 
-| Service | Used for | Why this one |
-|---|---|---|
-| Registry of Open Data on AWS (Amazon S3) | Overture Maps and Meta HRSL | Open, global data in cloud-native formats: the same code works for any Mexican city. |
-| Amazon Location Service: Maps | Base map | A vector style with an API key; no tile server to run. |
-| Amazon Location Service: Places | Geocode and SearchNearby | Current commercial places that complement Overture. Used as `SingleUse`: never stored. |
-| Amazon Location Service: Routes | CalculateIsolines and CalculateRoutes | Pedestrian routing from the exact address, which can't be precomputed for every home. |
-| AWS Amplify Hosting | The static site, CDN and HTTPS | Deployed by GitHub Actions with OIDC: no AWS keys stored anywhere. |
-| AWS Budgets | Cost alerts | Warns by email if the public API key is abused. |
+| Service                                  | Used for                              | Why this one                                                                             |
+| ---------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Registry of Open Data on AWS (Amazon S3) | Overture Maps and Meta HRSL           | Open, global data in cloud-native formats: the same code works for any Mexican city.     |
+| Amazon Location Service: Maps            | Base map                              | A vector style with an API key; no tile server to run.                                   |
+| Amazon Location Service: Places          | Geocode and SearchNearby              | Current commercial places that complement Overture. Used as `SingleUse`: never stored. |
+| Amazon Location Service: Routes          | CalculateIsolines and CalculateRoutes | Pedestrian routing from the exact address, which can't be precomputed for every home.    |
+| AWS Amplify Hosting                      | The static site, CDN and HTTPS        | Deployed by GitHub Actions with OIDC: no AWS keys stored anywhere.                       |
+| AWS Budgets                              | Cost alerts                           | Warns by email if the public API key is abused.                                          |
 
 Everything on AWS (the API keys, the Amplify app, the budget and the deploy role) is defined in Terraform. Every
 push to `main` runs the tests, a secret scan and Terraform checks before it deploys, and a workflow checks
@@ -158,13 +160,13 @@ the live site every 3 hours.
 be reproducible and free to recompute, so it comes only from open data. The personal layer has to be exact
 from someone's door, so it uses Amazon Location live.
 
-| Decision | Why | What I gave up |
-|---|---|---|
-| Walk along the street network, not a radius | In Culiacán the walk along the streets is a median 1.24 times the straight line (5th-95th percentile: 1.09 to 1.71). A radius would hide the people a river or a highway cuts off. | Building and checking a graph of 57,276 edges instead of drawing circles. |
-| H3 hexagons at resolution 10 | Equal-size cells, about a block each, that the browser rebuilds from their IDs; people are counted per cell, never per home. | Hexagon edges don't follow streets or blocks. |
-| Greedy coverage over *existing public* buildings | Simple to explain to a city official and it shows the diminishing returns. Opening an existing school is cheaper than building. | It isn't the global optimum, and "public" is inferred from the building's name. |
-| `SingleUse` for Amazon Location results | The planning layer stays 100% open and reproducible; Amazon results are drawn and discarded. | Every search costs requests; nothing is cached. |
-| A static site, no backend | Nothing to patch or scale; Amplify serves it from a CDN. | The API key is visible in the browser, so it is limited to 5 actions and this domain, expires on 2027-01-31, and the app allows 30 searches per visit. |
+| Decision                                           | Why                                                                                                                                                                                 | What I gave up                                                                                                                                         |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Walk along the street network, not a radius        | In Culiacán the walk along the streets is a median 1.24 times the straight line (5th-95th percentile: 1.09 to 1.71). A radius would hide the people a river or a highway cuts off. | Building and checking a graph of 57,276 edges instead of drawing circles.                                                                              |
+| H3 hexagons at resolution 10                       | Equal-size cells, about a block each, that the browser rebuilds from their IDs; people are counted per cell, never per home.                                                        | Hexagon edges don't follow streets or blocks.                                                                                                          |
+| Greedy coverage over *existing public* buildings | Simple to explain to a city official and it shows the diminishing returns. Opening an existing school is cheaper than building.                                                     | It isn't the global optimum, and "public" is inferred from the building's name.                                                                        |
+| `SingleUse` for Amazon Location results          | The planning layer stays 100% open and reproducible; Amazon results are drawn and discarded.                                                                                        | Every search costs requests; nothing is cached.                                                                                                        |
+| A static site, no backend                          | Nothing to patch or scale; Amplify serves it from a CDN.                                                                                                                            | The API key is visible in the browser, so it is limited to 5 actions and this domain, expires on 2027-01-31, and the app allows 30 searches per visit. |
 
 The core of the greedy step (`pipeline/build.py`): pick the building that covers the most older adults who
 aren't covered yet, mark them as covered, repeat.
@@ -193,17 +195,18 @@ nearest:
 ![Scatter plot of walking minutes, open-data map versus Amazon Location routes, for 50 hexagons; the points sit on the y = x line, almost all inside a band of plus or minus 2 minutes](assets/k8_validation_culiacan.png)
 *Open-data minutes versus Amazon Location minutes for 50 random hexagons: median difference 0.5 min, 94% within ±2 min.*
 
-| Evidence | Result | Source |
-|---|---|---|
-| Walking minutes vs Amazon Location routes (50 hexagons) | Median difference 0.5 min; 90th percentile 1.7 min; 94% within ±2 min; 100% within ±5 min; correlation 0.99 | `docs/validation.md` |
-| Places Overture is missing | In 10% of those hexagons (home to 12% of the sampled older adults), Amazon Location knows a refuge-type place at least 150 m closer. The headline is an upper bound. | `docs/validation.md` |
-| Spot-check of 15 random refuges | 10 found by name within 300 m; 8 with a compatible category | `docs/validation.md` |
-| Data cleanup | 6 clear false positives removed by hand (a cable company office and a travel agency labeled as malls, among others), with tests | `pipeline/build.py` |
-| Pipeline | Culiacán: 34 s to download from S3, 2.1 s to compute; same code for 3 cities | `stats.json` |
-| Live search | 486 ms median from Search to the answer | `docs/assets/latency.json` |
-| Tests | 45 automated tests: classification, band totals, "adding stores never makes access worse", network realism. CI runs them on every push; the network test needs the raw downloads, so it runs locally | `pipeline/tests/` |
+| Evidence                                                | Result                                                                                                                                                                                               | Source                       |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| Walking minutes vs Amazon Location routes (50 hexagons) | Median difference 0.5 min; 90th percentile 1.7 min; 94% within ±2 min; 100% within ±5 min; correlation 0.99                                                                                        | `docs/validation.md`       |
+| Places Overture is missing                              | In 10% of those hexagons (home to 12% of the sampled older adults), Amazon Location knows a refuge-type place at least 150 m closer, so the share far from a refuge is probably somewhat lower.                                 | `docs/validation.md`       |
+| Spot-check of 15 random refuges                         | 10 found by name within 300 m; 8 with a compatible category                                                                                                                                          | `docs/validation.md`       |
+| Older adults: HRSL vs INEGI's 2020 census | Census: 10.9% of Culiacán's population is 60+; HRSL: 7.7% (similar in the other two cities). Counts are probably about 40% low; the shares hold if the gap is even | `pipeline/census.py`, `docs/validation.md` |
+| Data cleanup                                            | 6 clear false positives removed by hand (a cable company office and a travel agency labeled as malls, among others), with tests                                                                      | `pipeline/build.py`        |
+| Pipeline                                                | Culiacán: 34 s to download from S3, 2.1 s to compute; same code for 3 cities                                                                                                                        | `stats.json`               |
+| Live search                                             | 486 ms median from Search to the answer                                                                                                                                                              | `docs/assets/latency.json` |
+| Tests                                                   | 47 automated tests: classification, band totals, "adding stores never makes access worse", network realism. CI runs them on every push; the network test needs the raw downloads, so it runs locally | `pipeline/tests/`          |
 
-![Line chart: percentage of older adults within a 10-minute walk of a refuge as proposed buildings are added from 0 to 10, for three cities. Culiacán goes from 40.7% to 51.6%, Hermosillo from 41.2% to 51.5%, Mexicali from 44.1% to 51.9%](assets/k7_coverage.png)
+![Line chart: percentage of older adults within a 10-minute walk of a refuge as proposed buildings are added from 0 to 10, for three cities. Culiacán goes from 40.7% to 51.4%, Hermosillo from 41.2% to 51.5%, Mexicali from 44.1% to 51.9%](assets/k7_coverage.png)
 *Ten public buildings would bring about one in ten more older adults within 10 minutes of a refuge. Each one adds less than the first.*
 
 ## 7. Challenges and mistakes
@@ -215,6 +218,10 @@ nearest:
   places. An exclusion list fixed most of it; a hand review of every refuge name removed 6 more.
 - **The first proposals were private schools and churches.** The greedy algorithm only maximizes coverage.
   Restricting candidates to public buildings, recognized by name, made the proposals ones a city could act on.
+  Two later proposals looked private (a brand-like name for a combined preschool and primary school, and one
+  named after a teaching method popular with private schools). I couldn't confirm they were public, so I dropped them.
+- **The population layer undercounts older adults.** HRSL puts 7.7% of Culiacán's population at 60+; INEGI's 2020
+  census, 10.9%. I kept HRSL, because it says *where* people live, and report the gap with numbers instead of hiding it.
 - **A test caught a distance bug.** The test "adding pharmacies never makes access worse" failed in 28 hexagons:
   the search picked the refuge with the nearest street corner, not the nearest door. A virtual source node fixed it.
 - **Hermosillo and Mexicali have no city polygon in Overture**, only whole municipalities, mostly desert. The
@@ -244,7 +251,7 @@ Across the three cities, **52,542 older adults** live more than a 15-minute walk
   during a heat wave, with how many older adults each one would bring within 10 minutes.
 
 ![Map of Culiacán with ten numbered gold markers on the proposed public buildings and the panel listing them, each with the number of older adults it would bring within 10 minutes](assets/k4_proposals.png)
-*The 10 proposed buildings in Culiacán: from 40.7% to 51.6% of older adults within 10 minutes of a refuge.*
+*The 10 proposed buildings in Culiacán: from 40.7% to 51.4% of older adults within 10 minutes of a refuge.*
 
 The pipeline is the same for any Mexican city: about 40 seconds of download and 2 seconds of compute. The
 natural next step is an official refuge network checked with the city: confirmed air conditioning, opening hours
@@ -254,7 +261,7 @@ and permission to stay.
 
 - Air conditioning and free entry are assumed from the type of place, not checked one by one.
 - Overture doesn't list every place (it has few convenience stores), so real access is probably better than shown.
-- The registry page doesn't say which census year is behind the HRSL 60+ layer.
+- HRSL counts about 30% fewer people aged 60+ than the 2020 census, so the counts of older adults are probably low.
 - Shade, sidewalks, safety and opening hours are not modeled: malls close at night, and the heat peaks from
   2 to 5 pm. Amazon Location's `OpeningHours` could filter refuges open at that time.
 - The map doesn't know who has a car. Next: cross it with Mexico's urban marginalization index.
