@@ -172,3 +172,18 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
 
   Cada ciudad tarda ~35 s en descargarse y ~3 s en calcularse. Pasan 45 tests: los de datos corren para las 3 ciudades.
 - Bug encontrado al probar: un link con `?city=` cargaba el mapa de esa ciudad pero dejaba el panel de Culiacán. Corregido.
+
+**2026-11-01 00:30 · Validación final, kit visual y páginas para la IA evaluadora**
+- **Validación sobre los datos finales:** volví a correr las pruebas 1 y 2 de `evidence.py` con los 211 refugios (la corrida anterior tenía 217). Todas las métricas salieron iguales: 0.5 min de diferencia mediana, 94% dentro de ±2 min y hueco de Overture en el 10% de los hexágonos.
+- **Volúmenes y tiempos del pipeline (§6.6):** `fetch.py` ahora guarda cuánto tarda cada descarga y `build.py` escribe una sección `pipeline` en `stats.json`. Culiacán: 28,002 lugares → 211 refugios; 49,024 segmentos → 57,276 aristas; 90,767 píxeles con población → 6,932 hexágonos; 34 s de descarga y 1.8 s de cálculo. Prueba de regresión: `hex.json`, los refugios y las propuestas quedaron idénticos byte por byte.
+- **`about.html` y `llms.txt`:** los genera `render_html.py` desde `stats.json` y `docs/validation.md`, así que ninguna cifra está escrita a mano. `index.html` los enlaza y tiene `og:image`.
+- **Diagramas K1–K3:** son SVG generados con Python (`docs/diagrams/render.py`) y exportados a PNG a 2x.
+  - La librería `diagrams` no trae el ícono de Amazon Location, así que uso el paquete oficial de AWS Architecture Icons.
+  - Los íconos no van en git: son marcas de AWS y no entran en la licencia MIT. El script los descarga la primera vez.
+- **Gráficas K6 y K7:** matplotlib, con la misma rampa de azules del mapa. Las 3 ciudades de K7 usan colores categóricos validados para daltonismo; el aqua tiene contraste bajo, por eso cada línea lleva su nombre al final.
+- **Capturas K4, GIF K5 y latencias:** `docs/diagrams/capture.py` usa Playwright contra el sitio en vivo.
+  - Error 1: las capturas de celular salían con el mapa casi en blanco. No era un bug de la app: ningún elemento tapaba el mapa y MapLibre sí reportaba 2,017 hexágonos dibujados. Era el WebGL de Chromium sin pantalla. Con `--use-angle=swiftshader` la parte casi blanca bajó de 96% a 1%.
+  - Error 2, en la app: con `?debug=1` el tiempo de Geocode no aparecía, porque `searchFrom` borraba la lista de tiempos. Lo corregí, aunque solo afecta al modo debug. Para medir no dependí de la app: el script cronometra cada `fetch()` a Amazon Location desde el navegador.
+  - Latencias (mediana de 5 búsquedas en vivo): Geocode 122 ms, SearchNearby 160 ms, CalculateRoutes 342 ms y CalculateIsolines 366 ms. Una búsqueda completa tarda **486 ms**. Las mediciones del 31 oct fueron más lentas (~1 s); eran las primeras llamadas.
+- **Dirección de la demo:** "Colonia Libertad, Culiacán". Está en la zona con más adultos mayores lejos de un refugio, el refugio más cercano es el Museo de Ciencias (público, sin marca) y la ruta de Amazon Location y el mapa de datos abiertos coinciden: **26 min**. La isolínea de 15 min no alcanza el museo.
+- Costo de esta sesión: ~100 llamadas de validación más ~50 de capturas, dentro de la capa gratuita.

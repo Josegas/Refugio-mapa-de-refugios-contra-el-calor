@@ -34,3 +34,6 @@ deploy/build/
 
 # OS
 .DS_Store
+
+# AWS Architecture Icons, downloaded by docs/diagrams/render.py (AWS trademarks, not MIT)
+docs/diagrams/.icons/

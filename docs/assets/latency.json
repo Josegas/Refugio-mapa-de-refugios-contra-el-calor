@@ -1,0 +1,10 @@
+{
+ "measured": "2026-11-01",
+ "runs": 5,
+ "site": "https://main.d6r3007drgrwp.amplifyapp.com",
+ "Geocode": 122,
+ "CalculateIsolines": 366,
+ "CalculateRoutes": 342,
+ "SearchNearby": 160,
+ "search_total": 486
+}
