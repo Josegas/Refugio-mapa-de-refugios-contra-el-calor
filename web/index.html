@@ -24,6 +24,28 @@
     <!-- The interactive map. Everything it shows is also written as text in the panel. -->
     <div id="map" role="region" aria-label="Mapa: minutos a pie hasta el refugio fresco más cercano / Map: walking minutes to the nearest cool refuge"></div>
 
+    <!-- Map legend. The color boxes get their colors from RAMP in app.js. Rows marked only-any, walk or
+         route appear only in that state (see "map legend" in style.css). -->
+    <div id="map-legend" class="map-legend">
+      <p class="ml-title">
+        <span class="only-ref"><span lang="es">Minutos a pie al refugio más cercano</span><span lang="en">Walking minutes to the nearest refuge</span></span>
+        <span class="only-any"><span lang="es">Minutos a pie al refugio, farmacia o tienda más cercana</span><span lang="en">Walking minutes to the nearest refuge, pharmacy or store</span></span>
+      </p>
+      <div class="ml-scale">
+        <span><i class="sw"></i>≤5</span><span><i class="sw"></i>5–10</span><span><i class="sw"></i>10–15</span><span><i class="sw"></i>15–20</span><span><i class="sw"></i>&gt;20</span>
+      </div>
+      <ul class="ml-keys">
+        <li><i class="k-refugio"></i><span lang="es">Refugio (puedes quedarte)</span><span lang="en">Refuge (you can stay)</span></li>
+        <li class="only-any"><i class="k-alivio"></i><span lang="es">Farmacia o tienda</span><span lang="en">Pharmacy or store</span></li>
+        <li><i class="k-propuesta">1</i><span lang="es">Edificio público propuesto</span><span lang="en">Proposed public building</span></li>
+        <li class="walk"><i class="k-line"></i><i class="k-line dashed"></i><i class="k-line dotted"></i>
+          <span lang="es">Hasta dónde llegas en 5 / 10 / 15 min</span><span lang="en">How far you get in 5 / 10 / 15 min</span></li>
+        <li class="route"><i class="k-route"></i>
+          <span class="real"><span lang="es">Ruta a pie (Amazon Location)</span><span lang="en">Walking route (Amazon Location)</span></span>
+          <span class="straight"><span lang="es">Línea recta, no es una ruta</span><span lang="en">Straight line, not a route</span></span></li>
+      </ul>
+    </div>
+
     <aside id="panel" aria-labelledby="title">
       <button id="sheet-handle" class="sheet-handle" type="button" aria-expanded="true">
         <span lang="es">Ocultar panel</span><span lang="en">Hide panel</span>

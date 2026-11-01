@@ -9,6 +9,8 @@
   --hairline: #e1e0d9;
   --accent: #1c5cab;
   --proposal: #eda100;
+  --heat: #c2410c;      /* the headline figure: warm, 5:1 contrast on the panel */
+  --heat-bg: #fdf1e8;
   --panel-width: 400px;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   color: var(--ink);
@@ -55,12 +57,14 @@ html[lang="es"] [lang="en"], html[lang="en"] [lang="es"] { display: none !import
 
 /* ------------------------------------------------------------------ panel */
 .panel-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-h1 { margin: 0; font-size: 26px; letter-spacing: -0.01em; }
+h1 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 26px; letter-spacing: -0.01em; }
+h1::before { content: ""; width: 26px; height: 26px; flex: none; background: url(favicon.svg) center / contain no-repeat; }
 .tagline { margin: 4px 0 0; color: var(--ink-2); font-size: 15px; line-height: 1.35; }
 .lang-toggle {
   flex: none; min-width: 44px; height: 32px; border: 1px solid var(--hairline); border-radius: 8px;
   background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer;
 }
+.lang-toggle:hover { border-color: var(--accent); color: var(--accent); }
 .intro { margin: 12px 0; color: var(--ink-2); font-size: 14px; line-height: 1.45; }
 .notice {
   margin: 12px 0 0; padding: 8px 10px; border-radius: 8px;
@@ -77,9 +81,10 @@ h1 { margin: 0; font-size: 26px; letter-spacing: -0.01em; }
 .city-select select { font: inherit; padding: 4px 6px; }
 
 /* Headline figure */
-.eyebrow { margin: 16px 0 2px; color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-.hero { margin: 0; font-size: 18px; line-height: 1.3; }
-.hero-num { display: block; font-size: 40px; line-height: 1.1; letter-spacing: -0.02em; }
+.summary { margin-top: 14px; padding: 4px 14px 12px; border-radius: 12px; background: var(--heat-bg); }
+.eyebrow { margin: 10px 0 2px; color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.hero { margin: 0; font-size: 17px; line-height: 1.35; }
+.hero-num { display: block; font-size: 44px; line-height: 1.05; letter-spacing: -0.02em; color: var(--heat); }
 .hero-sub { margin: 6px 0 0; color: var(--ink-2); font-size: 14px; line-height: 1.4; }
 
 /* Stacked bar: 2px surface gap between segments, rounded ends */
@@ -101,7 +106,8 @@ h1 { margin: 0; font-size: 26px; letter-spacing: -0.01em; }
   border: 1px solid var(--hairline); border-radius: 8px; background: var(--surface);
   color: var(--ink); font: inherit; text-align: left; cursor: pointer;
 }
-.fly:hover, .fly:focus-visible { border-color: var(--accent); }
+.fly:hover, .fly:focus-visible { border-color: var(--accent); background: #f3f7fd; }
+.fly { transition: background 0.15s, border-color 0.15s; }
 .fly .name { grid-column: 2; font-size: 14px; font-weight: 600; }
 .fly .meta { grid-column: 2; font-size: 12px; color: var(--muted); }
 .zones .fly { grid-template-columns: 1fr; }
@@ -122,9 +128,11 @@ h1 { margin: 0; font-size: 26px; letter-spacing: -0.01em; }
   border: 2px solid #0b0b0b; background: var(--proposal); color: #0b0b0b;
   font: 700 12px system-ui, sans-serif; cursor: pointer;
 }
-.maplibregl-popup-content { padding: 10px 12px; border-radius: 8px; font-size: 13px; line-height: 1.35; max-width: 260px; }
+.maplibregl-popup-content { padding: 10px 14px; border-radius: 10px; font-size: 13px; line-height: 1.4; max-width: min(260px, calc(100vw - 40px));
+  box-shadow: 0 4px 16px rgba(11, 11, 11, 0.18); }
+.maplibregl-popup-close-button { width: 28px; height: 28px; font-size: 18px; }
 .maplibregl-popup-content p { margin: 2px 0; }
-.pop-title { font-weight: 600; font-size: 14px; }
+.pop-title { font-weight: 700; font-size: 16px; padding-right: 18px; }
 .pop-kicker { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
 .hover-popup { pointer-events: none; }
 
@@ -151,8 +159,8 @@ dialog .close { float: right; border: 0; background: none; font-size: 26px; line
 #panel { display: flex; flex-direction: column; }
 #panel > *, .city-panel > * { flex-shrink: 0; }
 #city-panel, .city-panel { display: contents; }
-.sheet-handle { order: 0; } .panel-header { order: 1; } #notice { order: 2; } .intro { order: 3; }
-.summary { order: 4; } #search { order: 5; } .city-select { order: 6; } .controls { order: 7; }
+.sheet-handle { order: 0; } .panel-header { order: 1; } #notice { order: 2; } .summary { order: 3; }
+#search { order: 4; } .intro { order: 5; } .city-select { order: 6; } .controls { order: 7; }
 .zones { order: 8; } .proposals { order: 9; } .panel-footer { order: 10; }
 
 /* ------------------------------------------------------------------ personal search */
@@ -160,25 +168,80 @@ dialog .close { float: right; border: 0; background: none; font-size: 26px; line
 .search h2 { margin: 0 0 8px; font-size: 16px; }
 .search-form { display: flex; gap: 6px; }
 .search-form input {
-  flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid #c3c2b7; border-radius: 8px; font: inherit; font-size: 15px;
+  flex: 1; min-width: 0; min-height: 44px; padding: 8px 10px; border: 1px solid #c3c2b7; border-radius: 8px; font: inherit; font-size: 15px;
 }
 .search-form button {
-  padding: 8px 14px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer;
+  min-height: 44px; padding: 8px 16px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; font: inherit; font-weight: 600; cursor: pointer;
 }
+.search-form button:hover { background: #154a8c; }
 .search-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; margin-top: 8px; }
 .examples { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
 .chip {
   padding: 4px 10px; border: 1px solid var(--accent); border-radius: 999px; background: #fff;
-  color: var(--accent); font: inherit; font-size: 13px; cursor: pointer;
+  color: var(--accent); font: inherit; font-size: 13px; cursor: pointer; min-height: 34px;
 }
+.chip:hover { background: var(--accent); color: #fff; }
 .search-result { margin-top: 10px; padding-top: 10px; border-top: 1px solid #c9dcf3; font-size: 14px; line-height: 1.4; }
 .search-result p { margin: 3px 0; }
 .search-result h3 { margin: 10px 0 4px; font-size: 13px; }
-.result-main { font-size: 16px; font-weight: 600; }
+.result-main { font-size: 17px; font-weight: 700; }
 .note { padding: 6px 8px; border-radius: 6px; background: #fff7e0; font-size: 13px; }
 .nearby { margin: 0; padding-left: 18px; font-size: 13px; }
 .search-here {
-  margin-top: 6px; padding: 6px 10px; border: 0; border-radius: 6px; background: var(--accent); color: #fff;
+  margin-top: 8px; min-height: 36px; padding: 6px 12px; border: 0; border-radius: 6px; background: var(--accent); color: #fff;
   font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
 }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ------------------------------------------------------------------ map legend
+   Rows that depend on the state: .only-ref / .only-any follow the "what counts" radio buttons (CSS :has,
+   no JavaScript); .walk and .route appear after a search (classes set on <body> by app.js). */
+.map-legend {
+  position: absolute; z-index: 1; right: 12px; bottom: 36px; width: 270px; padding: 9px 11px 7px;
+  background: rgba(252, 252, 251, 0.95); border-radius: 10px; font-size: 12px; line-height: 1.3;
+  box-shadow: 0 2px 10px rgba(11, 11, 11, 0.14), 0 0 0 1px rgba(11, 11, 11, 0.05);
+}
+.ml-title { margin: 0 0 6px; font-weight: 700; }
+.ml-scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; text-align: center; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.ml-scale .sw { display: block; height: 10px; margin-bottom: 2px; }
+.ml-scale span:first-child .sw { border-radius: 3px 0 0 3px; }
+.ml-scale span:last-child .sw { border-radius: 0 3px 3px 0; }
+.ml-keys { list-style: none; margin: 7px 0 0; padding: 6px 0 0; border-top: 1px solid var(--hairline); }
+.ml-keys li { display: flex; align-items: center; gap: 7px; margin: 3px 0; }
+.ml-keys i { flex: none; display: inline-block; }
+.k-refugio { width: 11px; height: 11px; border-radius: 50%; background: #fff; border: 1.5px solid #0b0b0b; }
+.k-alivio { width: 7px; height: 7px; margin: 0 2px; border-radius: 50%; background: #52514e; box-shadow: 0 0 0 1px #fff; }
+.k-propuesta { width: 17px; height: 17px; margin-left: -3px; border-radius: 50%; background: var(--proposal); border: 1.5px solid #0b0b0b;
+  font: 700 9px/14px system-ui, sans-serif; font-style: normal; text-align: center; }
+.k-line { width: 14px; border-top: 2.5px solid #0b0b0b; }
+.k-line.dashed { border-top-style: dashed; border-top-width: 2px; }
+.k-line.dotted { border-top-style: dotted; border-top-width: 2px; }
+.ml-keys li.walk { gap: 3px; } .ml-keys li.walk > span { margin-left: 4px; }
+.k-route { width: 22px; height: 4px; border-radius: 2px; background: #eb6834; box-shadow: 0 0 0 1.5px #fff; }
+body.straight-route .k-route { background: repeating-linear-gradient(90deg, #eb6834 0 5px, transparent 5px 9px); box-shadow: none; }
+
+.map-legend .only-any, .ml-keys li.walk, .ml-keys li.route, .ml-keys .straight { display: none; }
+html:has(input[name="mode"][value="any"]:checked) .map-legend .only-ref { display: none; }
+html:has(input[name="mode"][value="any"]:checked) .map-legend span.only-any { display: inline; }
+html:has(input[name="mode"][value="any"]:checked) .map-legend li.only-any,
+body.has-walk .ml-keys li.walk, body.has-route .ml-keys li.route { display: flex; }
+body.straight-route .ml-keys .real { display: none; }
+body.straight-route .ml-keys .straight { display: inline; }
+
+/* Phones: the legend goes to the top-left corner (the panel covers the bottom); only the colors and
+   the search rows, to keep the map visible */
+@media (max-width: 899px) {
+  .map-legend { top: 10px; left: 10px; right: auto; bottom: auto; width: 210px; padding: 7px 9px 5px; font-size: 11px; }
+  .ml-keys li:not(.walk):not(.route) { display: none !important; }
+  .ml-keys { border-top: 0; padding-top: 0; margin-top: 2px; }
+  body:not(.has-walk):not(.has-route) .ml-keys { display: none; }
+  html:has(.maplibregl-popup) .map-legend { display: none; } /* a popup needs the space */
+}
+
+/* Desktop: the legend sits to the right of the panel, never under it */
+@media (min-width: 900px) and (max-width: 1100px) { .map-legend { width: 220px; } }
+
+/* People who ask the system for less motion: no sliding panel, no hover fades */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}

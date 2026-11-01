@@ -14,6 +14,7 @@ const API_KEY = CONFIG.apiKey || "";
 // Map colors: same 5 blues as pipeline/render_html.py. Lighter = closer to a refuge.
 const RAMP = ["#86b6ef", "#5598e7", "#2a78d6", "#1c5cab", "#0d366b"];
 const MIN_POP60_HIGHLIGHT = 10; // "only where older adults live" filter
+const HEX_OPACITY = 0.75;  // hexagon fill; lower = more of the streets and names show through
 
 const params = new URLSearchParams(location.search);
 const state = {
@@ -199,6 +200,9 @@ function colorBy(field) {
   return ["step", ["get", field], RAMP[0], 5.05, RAMP[1], 10.05, RAMP[2], 15.05, RAMP[3], 20.05, RAMP[4]];
 }
 
+// The map legend's color boxes come from RAMP, so they always match the hexagons
+document.querySelectorAll("#map-legend .sw").forEach((box, i) => (box.style.background = RAMP[i]));
+
 async function addDataLayers() {
   if (map.getSource("hexes")) return; // already added for this style
   const data = await cityData;
@@ -216,11 +220,17 @@ async function addDataLayers() {
 
   map.addSource("hexes", { type: "geojson", data: hexes });
   map.addLayer({ id: "hexes", type: "fill", source: "hexes",
-                 paint: { "fill-color": colorBy(state.mode), "fill-opacity": 0.78, "fill-outline-color": "rgba(255,255,255,0.25)" } },
+                 // No edge: neighbors of the same band merge into one area. Antialiasing off, or the soft edges of two
+                 // see-through cells overlap and draw a darker seam. The hexagons are still the unit of analysis.
+                 paint: { "fill-color": colorBy(state.mode), "fill-opacity": HEX_OPACITY, "fill-antialias": false } },
                firstLabel);
   map.addLayer({ id: "hex-hover", type: "line", source: "hexes",
                  paint: { "line-color": "#0b0b0b", "line-width": 2,
                           "line-opacity": ["case", ["boolean", ["feature-state", "hover"], false], 1, 0] } },
+               firstLabel);
+  map.addLayer({ id: "hex-selected", type: "line", source: "hexes",
+                 paint: { "line-color": "#0b0b0b", "line-width": 3,
+                          "line-opacity": ["case", ["boolean", ["feature-state", "selected"], false], 1, 0] } },
                firstLabel);
 
   map.addSource("refuges", { type: "geojson", data: data.refuges });
@@ -289,11 +299,23 @@ map.on("mouseleave", "hexes", () => {
   hoverPopup.remove();
 });
 
+// The tapped hexagon gets a dark outline until its popup closes or another one is tapped
+let selectedId = null;
+let selectToken = 0; // tells an old popup's "close" apart from the newest selection
+function selectHex(id) {
+  if (!map.getSource("hexes")) return;
+  if (selectedId !== null) map.setFeatureState({ source: "hexes", id: selectedId }, { selected: false });
+  selectedId = id;
+  if (id !== null) map.setFeatureState({ source: "hexes", id }, { selected: true });
+  return ++selectToken;
+}
+
 // Click (and tap on phones): a place if there is one under the finger, otherwise the hexagon
 map.on("click", (e) => {
   if (!map.getLayer("hexes")) return;
   const place = map.queryRenderedFeatures(e.point, { layers: ["refugios", "alivio"] })[0];
   if (place) {
+    selectHex(null);
     const p = place.properties;
     new maplibregl.Popup({ offset: 8 }).setLngLat(place.geometry.coordinates)
       .setHTML(`<p class="pop-title">${escapeHtml(p.n)}</p><p class="muted">${t().types[p.t] || p.t}</p>`).addTo(map);
@@ -302,7 +324,9 @@ map.on("click", (e) => {
   const hex = map.queryRenderedFeatures(e.point, { layers: ["hexes"] })[0];
   if (hex) {
     hoverPopup.remove();
-    new maplibregl.Popup({ offset: 8 }).setLngLat(e.lngLat).setHTML(hexHtml(hex.properties, e.lngLat)).addTo(map);
+    const token = selectHex(hex.id);
+    new maplibregl.Popup({ offset: 8 }).setLngLat(e.lngLat).setHTML(hexHtml(hex.properties, e.lngLat)).addTo(map)
+      .on("close", () => { if (token === selectToken) selectHex(null); });
   }
 });
 
@@ -336,6 +360,7 @@ function applyFilters() {
   const filter = only60 ? [">=", ["get", "pop60"], MIN_POP60_HIGHLIGHT] : null;
   map.setFilter("hexes", filter);
   map.setFilter("hex-hover", filter);
+  map.setFilter("hex-selected", filter);
 }
 
 // Zones and proposals in the panel: fly the map there
@@ -533,15 +558,23 @@ function drawIsolines(response) {
     geometry: { type: "MultiPolygon", coordinates: (iso.Geometries || []).map((g) => g.Polygon) },
   }));
   setGeoJSON("isolines", features, () => {
-    // One line style per threshold: 5 min solid, 10 min dashed, 15 min dotted
-    const styles = { 5: { width: 3, dash: null }, 10: { width: 2.2, dash: [3, 2] }, 15: { width: 1.8, dash: [1, 2] } };
+    // Below the refuge dots and the route, whichever answer arrives first
+    const below = map.getLayer("refugios") ? "alivio" : undefined;
+    // A white wash per area: the three overlap, so the 5-min area (inside all three) is the brightest
+    for (const minutes of [15, 10, 5]) {
+      map.addLayer({ id: `isoline-fill-${minutes}`, type: "fill", source: "isolines",
+                     filter: ["==", ["get", "minutes"], minutes], paint: { "fill-color": "#ffffff", "fill-opacity": 0.2 } }, below);
+    }
+    // One line style per threshold: 5 min solid, 10 min dashed, 15 min dotted (same as the map legend)
+    const styles = { 5: { width: 2.5, dash: null }, 10: { width: 2, dash: [3, 2] }, 15: { width: 1.6, dash: [1, 2] } };
     for (const [minutes, s] of Object.entries(styles)) {
       const paint = { "line-color": "#0b0b0b", "line-width": s.width };
       if (s.dash) paint["line-dasharray"] = s.dash;
       map.addLayer({ id: `isoline-${minutes}`, type: "line", source: "isolines",
-                     filter: ["==", ["get", "minutes"], Number(minutes)], paint });
+                     filter: ["==", ["get", "minutes"], Number(minutes)], paint }, below);
     }
   });
+  document.body.classList.add("has-walk"); // shows the walking-area rows of the map legend
   map.setPaintProperty("hexes", "fill-opacity", 0.45); // dim the grid so the walk stands out
   return features.flatMap((f) => f.geometry.coordinates.flat(2)).filter((_, i) => i % 10 === 0);
 }
@@ -556,6 +589,8 @@ function drawRoute(line, straight) {
   });
   // A straight line (demo mode) is dashed so nobody mistakes it for a real street route
   map.setPaintProperty("route", "line-dasharray", straight ? [2, 2] : null);
+  document.body.classList.add("has-route");
+  document.body.classList.toggle("straight-route", straight); // the legend then says "straight line", not "route"
 }
 
 function drawNearby(items) {
@@ -582,7 +617,8 @@ function clearSearch() {
   for (const id of ["isolines", "route", "nearby"]) {
     if (map.getSource(id)) map.getSource(id).setData({ type: "FeatureCollection", features: [] });
   }
-  if (map.getLayer("hexes")) map.setPaintProperty("hexes", "fill-opacity", 0.78);
+  if (map.getLayer("hexes")) map.setPaintProperty("hexes", "fill-opacity", HEX_OPACITY);
+  document.body.classList.remove("has-walk", "has-route", "straight-route");
 }
 
 function showResult(html) {

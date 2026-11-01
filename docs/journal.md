@@ -211,3 +211,16 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
 **2026-11-01 02:55 · Capturas nuevas y tiempo de carga**
 - Volví a tomar K4, K5 y `og.png` desde el sitio en vivo, ya con las propuestas nuevas (51.4%).
 - **Tiempo hasta ver el mapa con hexágonos** (la meta era menos de 3 s): mediana de **2.1 s en escritorio** y **1.7 s en celular**, en 3 visitas cada uno con caché vacía. La primera visita de todas tardó 3.6 s (conexión en frío al CDN). Lo medí con Playwright y WebGL por software; en un equipo real con GPU debería ser igual o más rápido.
+
+**2026-11-01 16:45 · Pulido visual del mapa y del panel**
+- Hice: cambios solo de estilo (CSS, propiedades de MapLibre y una leyenda en HTML), sin tocar datos, pipeline ni llamadas a Amazon Location.
+  - **Hexágonos sin borde blanco.** Las celdas vecinas con el mismo tiempo se leen como una zona y no como un panal. H3 sigue siendo la unidad de análisis: quitar el borde es solo una decisión visual.
+  - **Leyenda sobre el mapa** con los 5 intervalos, refugios, alivio (solo si está activo) y propuestas. Después de una búsqueda agrega las áreas de 5/10/15 min y la ruta. En modo demo dice "línea recta, no es una ruta". En celular va arriba a la izquierda, solo con los colores, y se oculta mientras hay un popup abierto.
+  - **Celda seleccionada** con contorno oscuro al tocarla. En celular no hay hover, así que antes no se veía qué hexágono se había tocado.
+  - **Áreas caminables** con un relleno blanco suave debajo de cada línea: el área de 5 min, que está dentro de las tres, queda como la más clara.
+  - **Panel:** la cifra principal va primero, en una tarjeta cálida, y la explicación pasa después de la búsqueda. Botones de al menos 44 px de alto, popups como fichas con el tiempo en grande y transiciones apagadas si el sistema pide menos movimiento.
+- Pasó: al quitar el borde, las orillas seguían viéndose como costuras más oscuras.
+- Cómo lo supe: en las capturas de antes y después con Playwright. El suavizado de bordes de dos celdas semitransparentes se encima justo en la orilla compartida.
+- Decidí: `fill-antialias: false` en la capa de hexágonos. Las costuras desaparecieron y a ese tamaño de celda no se notan bordes dentados.
+- Verifiqué: 47 tests pasan, sin errores en la consola, la página sin JavaScript sigue mostrando la cifra (`hero-num`, que es lo que revisa el monitoreo) y la búsqueda real dibuja isolíneas, ruta y lugares cercanos (una búsqueda, 6 llamadas).
+- Pendiente: volver a tomar K4, K5 y `og.png` desde el sitio en vivo después del deploy.
