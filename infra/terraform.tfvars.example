@@ -1,0 +1,3 @@
+# Copy this file to terraform.tfvars (git ignores it) and put in your own values:
+#   cp terraform.tfvars.example terraform.tfvars
+alert_email = "you@example.com"
