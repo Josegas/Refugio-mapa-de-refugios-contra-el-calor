@@ -12,6 +12,7 @@ Usage:  python pipeline/render_html.py      (run it after build.py)
 import html
 import json
 import re
+import shutil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -216,6 +217,22 @@ def table(head, rows, cls=""):
     return f'<table{f" class={cls!r}" if cls else ""}><thead><tr>{th}</tr></thead><tbody>{body}</tbody></table>'
 
 
+FIGURES = {  # images from docs/assets/ shown on about.html (copied to web/img/ by main())
+    "k1_architecture.png": "Architecture diagram: a data pipeline reads Overture Maps and Meta HRSL from Amazon S3 "
+                           "and writes static files; GitHub Actions deploys them to AWS Amplify; the browser calls "
+                           "Amazon Location Maps, Places and Routes.",
+    "k8_validation_culiacan.png": "Scatter plot of walking minutes, open-data map versus Amazon Location routes, for "
+                                  "50 random hexagons: the points sit on the y = x line.",
+}
+
+
+def figure(name, caption):
+    if not (WEB / "img" / name).exists():
+        return ""
+    return (f'<figure><img src="img/{name}" alt="{esc(FIGURES[name])}" loading="lazy">'
+            f'<figcaption>{caption}</figcaption></figure>')
+
+
 def links_html():
     items = [f'<a href="./">Live map</a>', f'<a href="{REPO}">Source code (MIT)</a>']
     if ARTICLE:
@@ -320,18 +337,22 @@ the same pipeline.</li>
          "Total population and people aged 60+ at about 30 m resolution", "Latest (Cloud-Optimized GeoTIFF)",
          "CC BY 4.0, Meta and CIESIN – Columbia University"],
     ]))
+    d = c0["network"]["detour_factor"]
     out.append("""<p>Both datasets are on the <a href="https://registry.opendata.aws/">Registry of Open Data on AWS</a>,
 in Amazon S3. Only each city's bounding box is read, with HTTP range requests, so a city downloads in about
 40 seconds instead of pulling global files.</p>
 
 <h2>How it's put on the map</h2>
+FIG_K1
 <ol>
 <li><b>Read from S3.</b> DuckDB queries the Overture GeoParquet files by bounding box; rasterio reads only the
 needed window of the HRSL Cloud-Optimized GeoTIFFs.</li>
 <li><b>Classify places.</b> Overture categories plus brand names decide what is a refuge, a quick stop, a
 candidate public building or nothing. A documented exclusion list removes clear mistakes (banks labeled
 as malls, a prison labeled as a government office).</li>
-<li><b>Walking network.</b> Road segments are split at their connectors into a graph; motorways are left out.</li>
+<li><b>Walking network.</b> Road segments are split at their connectors into a graph; motorways are left out.
+In Culiacán, walking along the streets is a median DETOUR times the straight-line distance (5th-95th percentile:
+DETOUR_RANGE), which is why a radius on a map underestimates the walk.</li>
 <li><b>Population on H3.</b> HRSL pixels are summed into H3 resolution-10 hexagons inside the study area.</li>
 <li><b>Walking minutes.</b> One multi-source Dijkstra run gives every hexagon the walk to the nearest refuge
 door, at 3.6 km/h, a conservative speed for an older adult in the heat.</li>
@@ -342,7 +363,9 @@ within 10 minutes.</li>
 browser with MapLibre GL JS and h3-js on an Amazon Location base map, and hosted on AWS Amplify.</li>
 </ol>
 <h3>Pipeline volumes, per city</h3>
-""")
+""".replace("DETOUR_RANGE", f"{d['p5']} to {d['p95']}").replace("DETOUR", f"{d['median']}")
+               .replace("FIG_K1", figure("k1_architecture.png", "A pipeline that runs once per city, and a static "
+                                         "site that calls Amazon Location live. One AWS Region: us-west-2.")))
     vrows = []
     for s in cities:
         q, n = s["pipeline"], s["network"]
@@ -387,6 +410,8 @@ deploying, and an uptime check runs every 3 hours.</p>
         ["Within ±5 minutes", esc(v["Within ±5 min"])],
         ["Correlation", esc(v["Correlation"])],
     ]))
+    out.append(figure("k8_validation_culiacan.png", "Each dot is one hexagon: open-data minutes against Amazon "
+                                                     "Location minutes. The shaded band is ±2 minutes."))
     out.append(f"""<p><b>What Overture is missing.</b> In {esc(v["Hexagons where Amazon Location knows a refuge-type place clearly closer"])}
 of those hexagons (home to {esc(v["Share of the sampled older adults living in those hexagons"])} of the sampled older adults),
 Amazon Location <code>SearchNearby</code> knows a refuge-type place at least 150 m closer. The headline figure is
@@ -504,6 +529,13 @@ def main():
     text = replace_between(text, "panel", panel(default))
     index.write_text(text)
     print(f"updated {index.relative_to(ROOT)} with {DEFAULT_CITY}")
+
+    # Images for about.html: copied from docs/assets/ (drawn by docs/diagrams/render.py and evidence.py)
+    (WEB / "img").mkdir(exist_ok=True)
+    for name in FIGURES:
+        src = ROOT / "docs" / "assets" / name
+        if src.exists():
+            shutil.copyfile(src, WEB / "img" / name)
 
     # about.html and llms.txt: all cities, default city first
     order = [c["id"] for c in cities]

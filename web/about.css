@@ -33,3 +33,7 @@ table { width: 100%; border-collapse: collapse; margin: 0.8em 0; font-size: 0.93
 th, td { text-align: left; vertical-align: top; padding: 7px 10px; border-bottom: 1px solid var(--hairline); }
 th { color: var(--ink-2); font-weight: 600; background: #f6f5f1; }
 td:first-child { font-weight: 500; }
+
+figure { margin: 1.2em 0; }
+figure img { width: 100%; height: auto; border: 1px solid var(--hairline); border-radius: 8px; }
+figcaption { color: var(--muted); font-size: 0.9rem; margin-top: 0.4em; }

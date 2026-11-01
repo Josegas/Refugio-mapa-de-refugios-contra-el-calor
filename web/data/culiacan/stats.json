@@ -28,7 +28,13 @@
   "nodes": 39069,
   "edges": 57276,
   "street_km": 4567,
-  "main_component_share": 0.993
+  "main_component_share": 0.993,
+  "detour_factor": {
+   "median": 1.24,
+   "p5": 1.09,
+   "p95": 1.71,
+   "pairs": 4418
+  }
  },
  "study_area": {
   "method": "overture_locality",
@@ -295,6 +301,6 @@
    "alivio": 366,
    "candidates": 197
   },
-  "build_seconds": 1.8
+  "build_seconds": 2.1
  }
 }

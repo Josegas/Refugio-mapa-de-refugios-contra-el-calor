@@ -28,7 +28,13 @@
   "nodes": 48330,
   "edges": 67950,
   "street_km": 5350,
-  "main_component_share": 0.989
+  "main_component_share": 0.989,
+  "detour_factor": {
+   "median": 1.27,
+   "p5": 1.08,
+   "p95": 1.66,
+   "pairs": 4385
+  }
  },
  "study_area": {
   "method": "urban_footprint",
@@ -295,6 +301,6 @@
    "alivio": 455,
    "candidates": 243
   },
-  "build_seconds": 2.1
+  "build_seconds": 2.2
  }
 }

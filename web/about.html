@@ -67,13 +67,16 @@ in Amazon S3. Only each city's bounding box is read, with HTTP range requests, s
 40 seconds instead of pulling global files.</p>
 
 <h2>How it's put on the map</h2>
+<figure><img src="img/k1_architecture.png" alt="Architecture diagram: a data pipeline reads Overture Maps and Meta HRSL from Amazon S3 and writes static files; GitHub Actions deploys them to AWS Amplify; the browser calls Amazon Location Maps, Places and Routes." loading="lazy"><figcaption>A pipeline that runs once per city, and a static site that calls Amazon Location live. One AWS Region: us-west-2.</figcaption></figure>
 <ol>
 <li><b>Read from S3.</b> DuckDB queries the Overture GeoParquet files by bounding box; rasterio reads only the
 needed window of the HRSL Cloud-Optimized GeoTIFFs.</li>
 <li><b>Classify places.</b> Overture categories plus brand names decide what is a refuge, a quick stop, a
 candidate public building or nothing. A documented exclusion list removes clear mistakes (banks labeled
 as malls, a prison labeled as a government office).</li>
-<li><b>Walking network.</b> Road segments are split at their connectors into a graph; motorways are left out.</li>
+<li><b>Walking network.</b> Road segments are split at their connectors into a graph; motorways are left out.
+In Culiacán, walking along the streets is a median 1.24 times the straight-line distance (5th-95th percentile:
+1.09 to 1.71), which is why a radius on a map underestimates the walk.</li>
 <li><b>Population on H3.</b> HRSL pixels are summed into H3 resolution-10 hexagons inside the study area.</li>
 <li><b>Walking minutes.</b> One multi-source Dijkstra run gives every hexagon the walk to the nearest refuge
 door, at 3.6 km/h, a conservative speed for an older adult in the heat.</li>
@@ -85,7 +88,7 @@ browser with MapLibre GL JS and h3-js on an Amazon Location base map, and hosted
 </ol>
 <h3>Pipeline volumes, per city</h3>
 
-<table><thead><tr><th scope="col">City</th><th scope="col">Places read → classified</th><th scope="col">Street segments → walking network</th><th scope="col">Population → hexagons</th><th scope="col">Candidates → proposals</th><th scope="col">Download + compute time</th></tr></thead><tbody><tr><td>Culiacán</td><td>28,002 → 211 refuges, 366 quick stops, 197 candidates</td><td>49,024 → 39,069 nodes, 57,276 edges (4,567 km)</td><td>90,767 populated pixels → 6,932 hexagons</td><td>197 → 10</td><td>34.1 s + 1.8 s</td></tr><tr><td>Hermosillo</td><td>34,233 → 218 refuges, 455 quick stops, 243 candidates</td><td>56,286 → 48,330 nodes, 67,950 edges (5,350 km)</td><td>93,872 populated pixels → 7,478 hexagons</td><td>243 → 10</td><td>38.3 s + 2.1 s</td></tr><tr><td>Mexicali</td><td>39,744 → 259 refuges, 666 quick stops, 337 candidates</td><td>53,732 → 41,840 nodes, 61,805 edges (5,800 km)</td><td>114,752 populated pixels → 9,504 hexagons</td><td>337 → 10</td><td>40.6 s + 2.2 s</td></tr></tbody></table>
+<table><thead><tr><th scope="col">City</th><th scope="col">Places read → classified</th><th scope="col">Street segments → walking network</th><th scope="col">Population → hexagons</th><th scope="col">Candidates → proposals</th><th scope="col">Download + compute time</th></tr></thead><tbody><tr><td>Culiacán</td><td>28,002 → 211 refuges, 366 quick stops, 197 candidates</td><td>49,024 → 39,069 nodes, 57,276 edges (4,567 km)</td><td>90,767 populated pixels → 6,932 hexagons</td><td>197 → 10</td><td>34.1 s + 2.1 s</td></tr><tr><td>Hermosillo</td><td>34,233 → 218 refuges, 455 quick stops, 243 candidates</td><td>56,286 → 48,330 nodes, 67,950 edges (5,350 km)</td><td>93,872 populated pixels → 7,478 hexagons</td><td>243 → 10</td><td>38.3 s + 2.2 s</td></tr><tr><td>Mexicali</td><td>39,744 → 259 refuges, 666 quick stops, 337 candidates</td><td>53,732 → 41,840 nodes, 61,805 edges (5,800 km)</td><td>114,752 populated pixels → 9,504 hexagons</td><td>337 → 10</td><td>40.6 s + 2.4 s</td></tr></tbody></table>
 <p class="note">Times measured on a laptop on a home connection: the download reads from Amazon S3,
 the compute step runs locally.</p>
 
@@ -101,6 +104,7 @@ deploying, and an uptime check runs every 3 hours.</p>
 (Pedestrian, 3.6 km/h) walked from the hexagon to the refuge the map says is nearest:</p>
 
 <table><thead><tr><th scope="col">Metric</th><th scope="col">Value</th></tr></thead><tbody><tr><td>Median absolute difference</td><td>0.5 min</td></tr><tr><td>90th percentile of the difference</td><td>1.7 min</td></tr><tr><td>Within ±2 minutes</td><td>94%</td></tr><tr><td>Within ±5 minutes</td><td>100%</td></tr><tr><td>Correlation</td><td>0.99</td></tr></tbody></table>
+<figure><img src="img/k8_validation_culiacan.png" alt="Scatter plot of walking minutes, open-data map versus Amazon Location routes, for 50 random hexagons: the points sit on the y = x line." loading="lazy"><figcaption>Each dot is one hexagon: open-data minutes against Amazon Location minutes. The shaded band is ±2 minutes.</figcaption></figure>
 <p><b>What Overture is missing.</b> In 10%
 of those hexagons (home to 12% of the sampled older adults),
 Amazon Location <code>SearchNearby</code> knows a refuge-type place at least 150 m closer. The headline figure is

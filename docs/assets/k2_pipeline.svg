@@ -7,7 +7,7 @@
 </defs>
 <rect width="1600" height="786" fill="#ffffff"/>
 <text x="40" y="52" font-family="Noto Sans, Arial, Helvetica, sans-serif" font-size="28" font-weight="700" fill="#232f3e" text-anchor="start"><tspan x="40" dy="0">Refugio: the data pipeline for Culiacán</tspan></text>
-<text x="40" y="82" font-family="Noto Sans, Arial, Helvetica, sans-serif" font-size="16" font-weight="400" fill="#4b5563" text-anchor="start"><tspan x="40" dy="0">Downloaded from Amazon S3 in 34 s, computed in 1.8 s on a laptop. Every number is from stats.json.</tspan></text>
+<text x="40" y="82" font-family="Noto Sans, Arial, Helvetica, sans-serif" font-size="16" font-weight="400" fill="#4b5563" text-anchor="start"><tspan x="40" dy="0">Downloaded from Amazon S3 in 34 s, computed in 2.1 s on a laptop. Every number is from stats.json.</tspan></text>
 <text x="40" y="130" font-family="Noto Sans, Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#6b7280" text-anchor="start"><tspan x="40" dy="0">STAGE</tspan></text>
 <text x="190" y="130" font-family="Noto Sans, Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#6b7280" text-anchor="start"><tspan x="190" dy="0">IN</tspan></text>
 <text x="560" y="130" font-family="Noto Sans, Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#6b7280" text-anchor="start"><tspan x="560" dy="0">STEP</tspan></text>

@@ -347,6 +347,23 @@ def band_stats(minutes, pop, pop60, thresholds=THRESHOLDS_MIN):
     return out
 
 
+def detour_factor(G, coords, in_main, seed=42):
+    """Walking distance along the streets / straight-line distance, for random pairs 0.5-5 km apart.
+    Same method as tests/test_network.py. It shows why a radius on a map underestimates the walk."""
+    nodes = np.nonzero(in_main)[0]
+    rng = np.random.default_rng(seed)
+    sources, targets = rng.choice(nodes, 40, replace=False), rng.choice(nodes, 400, replace=False)
+    dist = dijkstra(G, directed=False, indices=sources)[:, targets]
+    s_xy, t_xy = coords[sources], coords[targets]
+    straight = GEOD.inv(np.repeat(s_xy[:, 0], len(targets)), np.repeat(s_xy[:, 1], len(targets)),
+                        np.tile(t_xy[:, 0], len(sources)), np.tile(t_xy[:, 1], len(sources)))[2]
+    walk = dist.ravel()
+    ok = (straight >= 500) & (straight <= 5000) & np.isfinite(walk)
+    r = walk[ok] / straight[ok]
+    return {"median": round(float(np.median(r)), 2), "p5": round(float(np.percentile(r, 5)), 2),
+            "p95": round(float(np.percentile(r, 95)), 2), "pairs": int(ok.sum())}
+
+
 def pipeline_volumes(city_id):
     """How much raw data went in (for the pipeline diagram in the write-up): rows and pixels read."""
     raw = RAW / city_id
@@ -523,7 +540,7 @@ def build(city_id):
         "params": {"walk_speed_kmh": WALK_SPEED_MS * 3.6, "thresholds_min": THRESHOLDS_MIN, "cover_min": COVER_MIN,
                    "h3_res": H3_RES, "min_confidence": MIN_CONFIDENCE, "max_snap_m": MAX_SNAP_M},
         "sources": {"overture_release": OVERTURE_RELEASE, "hrsl_version": HRSL_VERSION},
-        "network": gstats,
+        "network": {**gstats, "detour_factor": detour_factor(G, coords, in_main)},
         "study_area": {"method": "overture_locality" if city.get("locality") else "urban_footprint",
                        "density_threshold_per_km2": None if city.get("locality") else URBAN_DENSITY,
                        "km2": round(abs(GEOD.geometry_area_perimeter(area)[0]) / 1e6, 1)},
