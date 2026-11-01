@@ -11,6 +11,7 @@ Usage:  python fetch.py culiacan
 import json
 import os
 import sys
+import time
 from pathlib import Path
 
 import duckdb
@@ -46,6 +47,8 @@ def fetch(city_id):
     out.mkdir(parents=True, exist_ok=True)
     con = connect()
     bf = bbox_filter(city["bbox"])
+    t0 = time.perf_counter()
+    seconds = {}  # how long each download takes, for the write-up (stats.json -> pipeline diagram)
 
     print(f"[{city_id}] places…")
     con.sql(f"""COPY (
@@ -54,12 +57,14 @@ def fetch(city_id):
                addresses[1].freeform AS addr, ST_X(geometry) AS lon, ST_Y(geometry) AS lat
         FROM read_parquet('{OVERTURE}/theme=places/type=place/*', hive_partitioning=1)
         WHERE {bf}) TO '{out}/places.parquet'""")
+    seconds["places"] = time.perf_counter() - t0
 
     print(f"[{city_id}] road segments…")
     con.sql(f"""COPY (
         SELECT id, class, subclass, connectors, ST_AsWKB(geometry) AS wkb
         FROM read_parquet('{OVERTURE}/theme=transportation/type=segment/*', hive_partitioning=1)
         WHERE subtype = 'road' AND {bf}) TO '{out}/segments.parquet'""")
+    seconds["segments"] = time.perf_counter() - t0 - sum(seconds.values())
 
     print(f"[{city_id}] boundaries…")
     xmin, ymin, xmax, ymax = city["bbox"]
@@ -69,6 +74,7 @@ def fetch(city_id):
         WHERE bbox.xmin < {xmax} AND bbox.xmax > {xmin} AND bbox.ymin < {ymax} AND bbox.ymax > {ymin}
           AND subtype IN ('county', 'locality', 'neighborhood', 'microhood', 'macrohood')
         ) TO '{out}/divisions.parquet'""")
+    seconds["divisions"] = time.perf_counter() - t0 - sum(seconds.values())
 
     print(f"[{city_id}] population rasters…")
     os.environ.setdefault("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
@@ -83,6 +89,11 @@ def fetch(city_id):
             t = src.window_transform(win)
             meta[key] = {"transform": list(t)[:6], "shape": arr.shape, "source": url.replace("/vsicurl/", "")}
     (out / "raster_meta.json").write_text(json.dumps(meta, indent=1))
+    seconds["population"] = time.perf_counter() - t0 - sum(seconds.values())
+    seconds = {k: round(v, 1) for k, v in seconds.items()}
+    seconds["total"] = round(time.perf_counter() - t0, 1)
+    (out / "fetch_meta.json").write_text(json.dumps({"seconds": seconds}, indent=1))
+    print(f"[{city_id}] fetched in {seconds['total']} s: {seconds}")
     print(f"[{city_id}] done → {out}")
 
 

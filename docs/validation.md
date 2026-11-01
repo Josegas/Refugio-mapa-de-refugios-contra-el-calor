@@ -6,8 +6,9 @@ responses were used once and not stored (IntendedUse "SingleUse").
 <!-- BEGIN:routes -->
 ## 1. Walking minutes: open-data map vs Amazon Location routes
 
-50 random hexagons with at least 5 older adults (random seed 2026, run on 2026-10-31).
-For each one, Amazon Location `CalculateRoutes` (Pedestrian, 3.6 km/h) from the hexagon center to the refuge our map says is nearest.
+50 random hexagons with at least 5 older adults (random seed 2026, run on 2026-11-01).
+For each one, Amazon Location `CalculateRoutes` (Pedestrian, 3.6 km/h) from the hexagon center to the
+refuge our map says is nearest.
 
 | Metric | Value |
 |---|---|
@@ -82,4 +83,5 @@ Billable requests for check 3: 15.
   travel agency labeled as malls, a temazcal (steam bath) and a municipal records office labeled as
   community centers, a religious group and a private language school labeled as cultural centers.
   They are excluded in `pipeline/build.py` (`NOT_REFUGES`), with tests.
-- Checks 1 and 2 ran before that cleanup (217 refuges, now 211). They will be re-run on the final data.
+- Checks 1 and 2 first ran before that cleanup (217 refuges). They were re-run on the final data
+  (211 refuges) on 2026-11-01 and every metric came out the same.

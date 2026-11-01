@@ -2,7 +2,7 @@
  "city": "Mexicali",
  "state": "Baja California",
  "id": "mexicali",
- "generated": "2026-10-31",
+ "generated": "2026-11-01",
  "center": [
   -115.455,
   32.615
@@ -277,5 +277,24 @@
    51.3,
    51.9
   ]
+ },
+ "pipeline": {
+  "places_read": 39744,
+  "segments_read": 53732,
+  "population_pixels_read": 863136,
+  "populated_pixels": 114752,
+  "fetch_seconds": {
+   "places": 6.2,
+   "segments": 21.1,
+   "divisions": 11.7,
+   "population": 1.6,
+   "total": 40.6
+  },
+  "places_classified": {
+   "refugio": 259,
+   "alivio": 666,
+   "candidates": 337
+  },
+  "build_seconds": 2.2
  }
 }

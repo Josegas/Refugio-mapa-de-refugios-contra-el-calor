@@ -15,6 +15,7 @@ Usage:  python build.py culiacan
 import json
 import re
 import sys
+import time
 import unicodedata
 from collections import Counter, defaultdict
 from datetime import date
@@ -346,7 +347,19 @@ def band_stats(minutes, pop, pop60, thresholds=THRESHOLDS_MIN):
     return out
 
 
+def pipeline_volumes(city_id):
+    """How much raw data went in (for the pipeline diagram in the write-up): rows and pixels read."""
+    raw = RAW / city_id
+    count = lambda f: duckdb.sql(f"SELECT count(*) FROM '{raw / f}'").fetchall()[0][0]
+    pop = np.load(raw / "pop.npy")
+    fetch_meta = raw / "fetch_meta.json"
+    return {"places_read": count("places.parquet"), "segments_read": count("segments.parquet"),
+            "population_pixels_read": int(pop.size), "populated_pixels": int(np.count_nonzero(pop)),
+            "fetch_seconds": json.loads(fetch_meta.read_text())["seconds"] if fetch_meta.exists() else None}
+
+
 def build(city_id):
+    t0 = time.perf_counter()
     city = CITIES[city_id]
     print(f"[{city_id}] boundaries")
     area, hoods, county = load_divisions(city_id, city)
@@ -529,6 +542,12 @@ def build(city_id):
                       "pct60_le10_before": round(100 * le10_60 / tot60, 1),
                       "pct60_le10_after": round(100 * (le10_60 + new60) / tot60, 1),
                       "coverage_curve_pct60": curve},
+        # Volumes at each stage and how long it took (the pipeline diagram, CLAUDE.md 6.6)
+        "pipeline": {**pipeline_volumes(city_id),
+                     "places_classified": {"refugio": int((tiers == "refugio").sum()),
+                                           "alivio": int((tiers == "alivio").sum()),
+                                           "candidates": len(candidates)},
+                     "build_seconds": round(time.perf_counter() - t0, 1)},
     }
     (out / "stats.json").write_text(json.dumps(stats, ensure_ascii=False, indent=1))
     print(json.dumps({k: stats[k] for k in ("counts", "population", "access_refugio", "access_any", "proposals", "network")},

@@ -2,7 +2,7 @@
  "city": "Culiacán",
  "state": "Sinaloa",
  "id": "culiacan",
- "generated": "2026-10-31",
+ "generated": "2026-11-01",
  "center": [
   -107.394,
   24.799
@@ -277,5 +277,24 @@
    50.8,
    51.6
   ]
+ },
+ "pipeline": {
+  "places_read": 28002,
+  "segments_read": 49024,
+  "population_pixels_read": 769824,
+  "populated_pixels": 90767,
+  "fetch_seconds": {
+   "places": 3.8,
+   "segments": 18.0,
+   "divisions": 9.8,
+   "population": 2.5,
+   "total": 34.1
+  },
+  "places_classified": {
+   "refugio": 211,
+   "alivio": 366,
+   "candidates": 197
+  },
+  "build_seconds": 1.8
  }
 }

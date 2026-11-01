@@ -2,7 +2,7 @@
  "city": "Hermosillo",
  "state": "Sonora",
  "id": "hermosillo",
- "generated": "2026-10-31",
+ "generated": "2026-11-01",
  "center": [
   -110.961,
   29.073
@@ -277,5 +277,24 @@
    50.7,
    51.5
   ]
+ },
+ "pipeline": {
+  "places_read": 34233,
+  "segments_read": 56286,
+  "population_pixels_read": 874800,
+  "populated_pixels": 93872,
+  "fetch_seconds": {
+   "places": 4.7,
+   "segments": 17.7,
+   "divisions": 14.6,
+   "population": 1.4,
+   "total": 38.3
+  },
+  "places_classified": {
+   "refugio": 218,
+   "alivio": 455,
+   "candidates": 243
+  },
+  "build_seconds": 2.1
  }
 }
