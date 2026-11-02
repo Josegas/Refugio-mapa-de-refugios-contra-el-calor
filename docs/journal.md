@@ -237,3 +237,9 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
   - Usar Las Quintas como contraejemplo "porque la mayoría tiene coche": no tenemos datos de coches; sería inventarlo.
   - Las cifras ajustadas por el censo de Hermosillo y Mexicali sí cuadran: se calculan con las proporciones sin redondear, no con los porcentajes de la tabla.
 - Verifiqué: el ejemplo de Díaz Ordaz muestra el aviso de Plaza Sur en ES y EN, sin errores en la consola, y pasan los 47 tests.
+
+**2026-11-01 17:40 · Bug: cambiar de ciudad dejó de funcionar con el rediseño**
+- Pasó: al elegir Hermosillo en el selector, la consola mostraba `Source "hexes" cannot be removed while layer "hex-selected" is using it` y el mapa caía en modo demo.
+- Cómo lo supe: revisando el código de `switchCity` antes de empezar el tour, y después reproduciéndolo con Playwright. Las pruebas del rediseño no cubrieron el cambio de ciudad.
+- Causa: el rediseño agregó la capa `hex-selected` (el contorno de la celda tocada), pero no se agregó a la lista de capas que se borran antes de cambiar los datos.
+- Decidí: borrarla junto con las demás y reiniciar la selección. Verificado: Hermosillo carga sin errores. Lección: cada capa nueva va a esa lista, y el cambio de ciudad entra en la revisión de cada cambio visual.

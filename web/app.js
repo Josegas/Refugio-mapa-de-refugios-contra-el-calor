@@ -405,7 +405,9 @@ async function switchCity(city) {
   clearSearch();
   if (originMarker) originMarker.remove();
   document.getElementById("search-result").hidden = true;
-  for (const id of ["hex-hover", "hexes", "refugios", "alivio"]) if (map.getLayer(id)) map.removeLayer(id);
+  // Every layer that reads the "hexes" or "refuges" source must go before the source itself
+  selectedId = null;
+  for (const id of ["hex-selected", "hex-hover", "hexes", "refugios", "alivio"]) if (map.getLayer(id)) map.removeLayer(id);
   for (const id of ["hexes", "refuges"]) if (map.getSource(id)) map.removeSource(id);
   await addDataLayers();
 }
