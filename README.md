@@ -105,7 +105,9 @@ from open data, so anyone can recompute it. Amazon Location results are used onc
 | Older adults: HRSL vs INEGI 2020 census | HRSL: 7.7% of Culiacán is 60+; census: 10.9%. Counts are probably low; shares hold if the gap is even ([pipeline/census.py](pipeline/census.py)) |
 
 Details: [docs/validation.md](docs/validation.md). The results as an Apache Iceberg table, with example SQL
-queries, a snapshot per city and time travel: [docs/iceberg.md](docs/iceberg.md). Development journal, with every decision and mistake:
+queries, a snapshot per city and time travel: [docs/iceberg.md](docs/iceberg.md).
+
+![Amazon Athena results in the AWS console: the hexagons$snapshots query returns three rows, one Iceberg append snapshot per city, adding 6,932, 7,478 and 9,504 hexagons](docs/assets/athena_iceberg.png) Development journal, with every decision and mistake:
 [docs/journal.md](docs/journal.md).
 
 ![Bar chart: share of older adults by walking minutes to the nearest refuge in Culiacán, Hermosillo and Mexicali](docs/assets/k6_bands.png)
