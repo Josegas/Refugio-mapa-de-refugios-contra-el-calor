@@ -24,3 +24,12 @@ output "running_as" {
   description = "Identity Terraform used. Should end in user/refugio-dev."
   value       = data.aws_caller_identity.current.arn
 }
+
+output "analytics_bucket" {
+  description = "Bucket with the Iceberg table (pass it to pipeline/iceberg.py --bucket)"
+  value       = aws_s3_bucket.analytics.bucket
+}
+
+output "athena_workgroup" {
+  value = aws_athena_workgroup.refugio.name
+}

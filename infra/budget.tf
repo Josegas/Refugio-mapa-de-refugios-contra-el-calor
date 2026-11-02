@@ -15,7 +15,7 @@ resource "aws_budgets_budget" "refugio" {
   # Only the services Refugio uses
   cost_filter {
     name   = "Service"
-    values = ["Amazon Location Service", "AWS Amplify"]
+    values = ["Amazon Location Service", "AWS Amplify", "Amazon Athena", "Amazon Simple Storage Service", "AWS Glue"]
   }
 
   # Measure usage BEFORE credits are applied. With credits included the cost would always look
