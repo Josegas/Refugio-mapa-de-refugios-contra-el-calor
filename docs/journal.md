@@ -273,3 +273,8 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
 - K1: agregué una tercera zona, "Analytics", con Amazon S3, AWS Glue y Amazon Athena (pasos 8 y 9), con los íconos oficiales de AWS. K2 y K3 salieron idénticos porque sus datos no cambiaron.
 - `about.html` ahora menciona la tabla Iceberg en el método, en la tabla de servicios y en la infraestructura. El README y el artículo también.
 - Verifiqué: pasan los 47 tests, y `index.html`, `llms.txt` y los paneles quedaron idénticos.
+
+**2026-11-02 09:40 · Texto de las isolíneas más claro**
+- Pasó: al revisar la app, no quedaba claro para qué sirven las áreas punteadas de 5, 10 y 15 min. Parecían líneas que no llevan a ningún lado, y la única que guía es la ruta naranja.
+- Cómo lo supe: lo preguntó el autor del proyecto al probarla. Si a él no le quedó claro, a un juez tampoco.
+- Decidí: cambiar solo la nota del resultado, en ES y EN, para que diga cómo se usan: todo lo que queda dentro de un área se alcanza caminando en ese tiempo o menos, y un lugar fresco dentro es una opción. Es un cambio de texto después del congelamiento, sin tocar la lógica del mapa.
