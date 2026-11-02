@@ -125,16 +125,28 @@ def panel(s):
     out.append("</ol></section>")
 
     # Proposals
+    features = json.loads((WEB / "data" / s["id"] / "proposals.geojson").read_text())["features"]
+    only_schools = all(f["properties"]["type"] == "escuela" for f in features)
+    how_es = ("No se trata de cerrar escuelas: la idea es abrirlas como refugio en vacaciones de verano y fines de semana, "
+              "cuando no hay clases, y solo las que tengan aire acondicionado." if only_schools else
+              "No cambian de uso: la idea es abrirlos como refugio en las horas en que no se usan, y solo los que tengan "
+              "aire acondicionado.")
+    how_en = ("This doesn't mean closing schools: the idea is to open them as refuges during summer break and on weekends, "
+              "when there are no classes, and only those with air conditioning." if only_schools else
+              "Their use doesn't change: the idea is to open them as refuges when they're not in use, and only those "
+              "with air conditioning.")
     out.append('<section class="proposals"><h2>'
                + both(f'{p["n"]} edificios públicos que podrían abrir como refugio',
                       f'{p["n"]} public buildings that could open as refuges')
                + '</h2><p class="muted">'
-               + both(f'Con estos {p["n"]}, los adultos mayores con un refugio a 10 min o menos pasan del '
-                      f'{p["pct60_le10_before"]}% al {p["pct60_le10_after"]}% (+{num(p["new_pop60"])} personas).',
-                      f'With these {p["n"]}, older adults within a 10-minute walk of a refuge go from '
-                      f'{p["pct60_le10_before"]}% to {p["pct60_le10_after"]}% (+{num(p["new_pop60"])} people).')
+               + both(f'Hoy, el {p["pct60_le10_before"]}% de los adultos mayores de la ciudad tiene un refugio a 10 min o menos '
+                      f'caminando. Con estos {p["n"]} sería el {p["pct60_le10_after"]}%: {num(p["new_pop60"])} personas más. '
+                      + how_es,
+                      f'Today, {p["pct60_le10_before"]}% of the city\'s older adults have a refuge within a 10-minute walk. '
+                      f'With these {p["n"]} it would be {p["pct60_le10_after"]}%: {num(p["new_pop60"])} more people. '
+                      + how_en)
                + "</p><ol>")
-    for f in json.loads((WEB / "data" / s["id"] / "proposals.geojson").read_text())["features"]:
+    for f in features:
         q = f["properties"]
         lon, lat = f["geometry"]["coordinates"]
         es_t, en_t = TYPE.get(q["type"], (q["type"], q["type"]))
@@ -448,9 +460,13 @@ name within 300 m, {esc(v["...and with a compatible category"])} with a compatib
         q = f["properties"]
         prows.append([q["rank"], esc(q["name"]), TYPE.get(q["type"], ("", q["type"]))[1], f'+{num(q["new_pop60"])}'])
     out.append(table(["#", "Building", "Type", "Older adults newly within 10 min"], prows))
-    out.append(f"""<p class="note">With these {p0["n"]}, older adults within a 10-minute walk of a refuge go from
-{p0["pct60_le10_before"]}% to {p0["pct60_le10_after"]}% (+{num(p0["new_pop60"])} people). "Public" is inferred
-from the building's name, not from an official registry.</p>
+    out.append(f"""<p class="note">Today, {p0["pct60_le10_before"]}% of the city's older adults have a refuge within a 10-minute walk.
+With these {p0["n"]} it would be {p0["pct60_le10_after"]}%: {num(p0["new_pop60"])} more people.
+The algorithm only looks at where each building is; in all three cities the best-placed ones were public schools.
+This doesn't mean closing schools: the idea is to open them as refuges during summer break and on weekends, when
+there are no classes. Most public schools also teach an afternoon shift, so on school days other public buildings
+would be needed. Each school would still need checking: air conditioning, staff, restrooms and the school's agreement. "Public" is inferred from the building's name, not from an official
+registry.</p>
 
 <h2>Limitations</h2>
 <ul>

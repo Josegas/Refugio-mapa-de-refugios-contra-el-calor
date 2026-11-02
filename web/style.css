@@ -245,3 +245,46 @@ body.straight-route .ml-keys .straight { display: inline; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+
+/* ------------------------------------------------------------------ guided tour (tour.js) */
+.tour-start {
+  margin-top: 10px; min-height: 36px; padding: 6px 14px; border: 1px solid var(--accent); border-radius: 999px;
+  background: var(--accent); color: #fff; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.tour-start:hover { background: #154a8c; }
+
+/* Desktop: a card at the bottom of the map, to the right of the panel */
+.tour {
+  position: absolute; z-index: 3; bottom: 36px; left: calc(var(--panel-width) + 36px); width: min(380px, calc(100% - var(--panel-width) - 340px));
+  min-width: 300px; padding: 12px 16px 14px; background: var(--surface); border-radius: 12px;
+  box-shadow: 0 6px 24px rgba(11, 11, 11, 0.22), 0 0 0 1px rgba(11, 11, 11, 0.06);
+  animation: tour-in 0.18s ease-out;
+}
+@keyframes tour-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.tour-head { display: flex; justify-content: space-between; align-items: center; }
+.tour-count { color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.tour-close { width: 32px; height: 32px; margin: -6px -8px 0 0; border: 0; background: none; color: var(--ink-2); font-size: 22px; cursor: pointer; }
+.tour-title { margin: 2px 0 6px; font-size: 18px; }
+.tour-body { margin: 0; font-size: 15px; line-height: 1.45; }
+.tour-body strong { color: var(--heat); }
+.tour-dots { display: flex; gap: 5px; margin: 12px 0 10px; }
+.tour-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--hairline); }
+.tour-dots i.on { background: var(--accent); width: 18px; border-radius: 4px; }
+.tour-nav { display: flex; justify-content: space-between; gap: 8px; }
+.tour-nav button {
+  min-height: 44px; padding: 8px 16px; border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer;
+}
+.tour-prev { border: 1px solid var(--hairline); background: var(--surface); color: var(--ink); }
+.tour-next { flex: 1; border: 0; background: var(--accent); color: #fff; }
+.tour-next:hover { background: #154a8c; }
+.tour-nav button:disabled { opacity: 0.45; cursor: default; }
+
+/* While touring the legend stays, but on narrow desktops it moves up out of the card's way */
+@media (min-width: 900px) and (max-width: 1250px) { body.touring .map-legend { bottom: auto; top: 80px; } }
+
+/* Phones: the card goes on top, the panel is folded, the legend steps aside */
+@media (max-width: 899px) {
+  .tour { top: 10px; left: 10px; right: 10px; bottom: auto; width: auto; min-width: 0; padding: 10px 14px 12px; }
+  .tour-body { font-size: 14px; }
+  body.touring .map-legend { display: none; }
+}
