@@ -45,7 +45,7 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
 - Decidí:
   - Todo separado de otros proyectos: un usuario IAM nuevo, `refugio-dev`, con MFA y credenciales temporales (`aws login`, perfil `refugio`); recursos con nombre `refugio-*` y etiqueta `Project=refugio`.
   - Toda la infraestructura en Terraform: Budget, API key, Amplify y el rol para GitHub Actions.
-  - Amplify sin conexión a Git: GitHub Actions corre los tests y despliega con OIDC, sin llaves guardadas. La API key se lee de AWS durante el deploy, así que no queda ni en GitHub ni en el estado de Terraform. Reemplaza al `amplify.yml` de CLAUDE.md §5.
+  - Amplify sin conexión a Git: GitHub Actions corre los tests y despliega con OIDC, sin llaves guardadas. La API key se lee de AWS durante el deploy, así que no queda ni en GitHub ni en el estado de Terraform. Reemplaza el plan original de generar `web/config.js` con un `amplify.yml` durante el build de Amplify.
   - Costo objetivo: $0 (estado de Terraform local, GitHub Actions gratis por ser repo público).
 
 **2026-10-31 15:52 · Entorno local y descarga**
@@ -223,7 +223,7 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
 - Cómo lo supe: en las capturas de antes y después con Playwright. El suavizado de bordes de dos celdas semitransparentes se encima justo en la orilla compartida.
 - Decidí: `fill-antialias: false` en la capa de hexágonos. Las costuras desaparecieron y a ese tamaño de celda no se notan bordes dentados.
 - Verifiqué: 47 tests pasan, sin errores en la consola, la página sin JavaScript sigue mostrando la cifra (`hero-num`, que es lo que revisa el monitoreo) y la búsqueda real dibuja isolíneas, ruta y lugares cercanos (una búsqueda, 6 llamadas).
-- Pendiente: volver a tomar K4, K5 y `og.png` desde el sitio en vivo después del deploy.
+- Después del deploy hacía falta volver a tomar K4, K5 y `og.png` desde el sitio en vivo; se hizo el 1 de noviembre a las 23:05 (ver esa entrada).
 
 **2026-11-01 17:20 · Aviso de lugares que le faltan a Overture y correcciones de texto (revisión externa)**
 - Pasó: una revisión externa de la app en vivo notó que en el ejemplo de Díaz Ordaz el refugio más cercano está a 31 min, pero Amazon Location lista "Plaza Sur" a 363 m sin ninguna nota. Es el hueco de Overture que ya medimos en la validación (10% de los hexágonos), pero la app no lo decía.
@@ -259,6 +259,17 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
 - Decidí: Iceberg en un bucket normal con Glue y Athena, no S3 Tables. Para consultar S3 Tables desde Athena hay que activar una integración con Lake Formation que tiene varios pasos manuales de permisos, y con el tiempo que queda era riesgoso. El siguiente paso sería migrar a S3 Tables para que AWS se encargue del mantenimiento.
 - Solo guardamos nuestros resultados de datos abiertos. Nada de Amazon Location Places.
 - Pasó: en la consola de Athena salió "Antes de ejecutar la primera consulta, debe configurar una ubicación del resultado de la consulta en Amazon S3". La consola abre en el workgroup `primary`, que no tiene carpeta de resultados. La solución es elegir el workgroup `refugio`. No configuré una carpeta en `primary`, porque ahí las consultas no tendrían el tope de 1 GB ni la limpieza a los 7 días.
-- Diferencia con `stats.json`: la tabla guarda los valores redondeados que publica el mapa (minutos a 0.1), así que "más de 15 min" da un poco menos: Culiacán 17,368 contra 17,441, Hermosillo 18,715 contra 18,859 y Mexicali 16,104 contra 16,241, menos de 1% en las tres. Las cifras de la entrega siguen saliendo de `stats.json`. Está explicado en `docs/iceberg.md`.
+- Diferencia con `stats.json`: la tabla guarda los valores redondeados que publica el mapa (minutos a 0.1), así que "más de 15 min" da un poco menos: Culiacán 17,368 contra 17,441, Hermosillo 18,715 contra 18,859 y Mexicali 16,104 contra 16,242, menos de 1% en las tres. Las cifras de la entrega siguen saliendo de `stats.json`. Está explicado en `docs/iceberg.md`.
 - La fila sin tipo de la segunda consulta son 52 hexágonos de Culiacán con 24 adultos mayores que no tienen ningún refugio a menos de 60 min, el límite de búsqueda.
 - Costo: unas 15 consultas de Athena, cada una cobrada como 10 MB. Menos de un centavo de dólar.
+
+**2026-11-01 23:05 · Capturas nuevas e Iceberg en el diagrama de arquitectura**
+- Pasó: las capturas (K4), el GIF (K5) y `og.png` eran de las 02:11, antes del pulido visual de las 16:45 y del recorrido guiado. El artículo y la vista previa del link mostraban el diseño viejo.
+- Hice: volví a correr `docs/diagrams/capture.py` contra el sitio en vivo con `--no-latency`. El rediseño no cambió las llamadas a Amazon Location, así que las latencias de K3 y del artículo (486 ms) siguen valiendo y no se mueven. Fueron 3 búsquedas, unas 18 llamadas facturables.
+- Pasó: la portada (`k4_hero.png`) salió sin mapa base ni hexágonos, solo con los marcadores de las propuestas.
+- Cómo lo supe: revisando cada imagen antes de usarla. Las demás de la misma corrida salieron bien.
+- Causa probable: es la primera página de la corrida, con la caché vacía, y se capturó antes de que el mapa terminara de dibujarse.
+- Decidí: esperar 2.5 s más en esa primera captura. La volví a tomar y salió completa.
+- K1: agregué una tercera zona, "Analytics", con Amazon S3, AWS Glue y Amazon Athena (pasos 8 y 9), con los íconos oficiales de AWS. K2 y K3 salieron idénticos porque sus datos no cambiaron.
+- `about.html` ahora menciona la tabla Iceberg en el método, en la tabla de servicios y en la infraestructura. El README y el artículo también.
+- Verifiqué: pasan los 47 tests, y `index.html`, `llms.txt` y los paneles quedaron idénticos.
