@@ -224,3 +224,16 @@ Este diario se convierte casi sin esfuerzo en la sección "Retos y errores" de l
 - Decidí: `fill-antialias: false` en la capa de hexágonos. Las costuras desaparecieron y a ese tamaño de celda no se notan bordes dentados.
 - Verifiqué: 47 tests pasan, sin errores en la consola, la página sin JavaScript sigue mostrando la cifra (`hero-num`, que es lo que revisa el monitoreo) y la búsqueda real dibuja isolíneas, ruta y lugares cercanos (una búsqueda, 6 llamadas).
 - Pendiente: volver a tomar K4, K5 y `og.png` desde el sitio en vivo después del deploy.
+
+**2026-11-01 17:20 · Aviso de lugares que le faltan a Overture y correcciones de texto (revisión externa)**
+- Pasó: una revisión externa de la app en vivo notó que en el ejemplo de Díaz Ordaz el refugio más cercano está a 31 min, pero Amazon Location lista "Plaza Sur" a 363 m sin ninguna nota. Es el hueco de Overture que ya medimos en la validación (10% de los hexágonos), pero la app no lo decía.
+- Decidí: cuando SearchNearby encuentra un lugar tipo refugio (plaza, departamental, biblioteca, museo o centro comunitario) al menos 150 m más cerca en línea recta que nuestro refugio, la app muestra un aviso. Es el mismo umbral de la validación. Súper, farmacias y tiendas no cuentan, porque no son refugios. No se guarda nada: es la misma respuesta `SingleUse`.
+- Otras correcciones de la misma revisión:
+  - "Según los datos abiertos de Overture Maps" en la cifra principal: la población viene de Meta HRSL, no de Overture. Ahora dice las dos fuentes, en el panel y en `about.html`.
+  - El encabezado de una columna de `about.html` empezaba con "...". Ahora se entiende solo.
+  - Los botones de ejemplo ahora dicen qué son: las 3 zonas con más adultos mayores lejos de un refugio.
+- No apliqué tres sugerencias:
+  - Decir "al menos 17,441": los dos sesgos van en sentidos contrarios (HRSL cuenta menos adultos mayores, Overture tiene menos lugares), así que la cifra no es un mínimo.
+  - Usar Las Quintas como contraejemplo "porque la mayoría tiene coche": no tenemos datos de coches; sería inventarlo.
+  - Las cifras ajustadas por el censo de Hermosillo y Mexicali sí cuadran: se calculan con las proporciones sin redondear, no con los porcentajes de la tabla.
+- Verifiqué: el ejemplo de Díaz Ordaz muestra el aviso de Plaza Sur en ES y EN, sin errores en la consola, y pasan los 47 tests.

@@ -42,6 +42,7 @@ const TEXT = {
     nearestRefuge: "Refugio más cercano",
     onFootRoute: (min, km) => `${min} min a pie · ruta de Amazon Location (${km} km)`,
     openDataEstimate: (min) => `${min} según el mapa de datos abiertos`,
+    closerByAmazon: (name, cat, m) => `Amazon Location conoce un lugar tipo refugio más cerca: <strong>${name}</strong> (${cat}, a ${m} m en línea recta). No está en los datos abiertos del mapa, así que desde aquí el tiempo real puede ser menor. Pasa en cerca de 1 de cada 10 hexágonos.`,
     straightLine: "Línea recta (modo demo): la ruta real por las calles no se pudo calcular.",
     isolinesNote: "Áreas punteadas: hasta dónde llegas caminando en 5, 10 y 15 min (Amazon Location, velocidad peatonal estándar).",
     nearbyTitle: "Lugares frescos cerca según Amazon Location",
@@ -79,6 +80,7 @@ const TEXT = {
     nearestRefuge: "Nearest refuge",
     onFootRoute: (min, km) => `${min} min on foot · Amazon Location route (${km} km)`,
     openDataEstimate: (min) => `${min} according to the open-data map`,
+    closerByAmazon: (name, cat, m) => `Amazon Location knows a refuge-type place closer: <strong>${name}</strong> (${cat}, ${m} m in a straight line). It is not in the open data behind the map, so from here the real walk may be shorter. This happens in about 1 in 10 hexagons.`,
     straightLine: "Straight line (demo mode): the real street route could not be calculated.",
     isolinesNote: "Dotted areas: how far you get on foot in 5, 10 and 15 min (Amazon Location, standard walking speed).",
     nearbyTitle: "Cool places nearby according to Amazon Location",
@@ -437,6 +439,19 @@ const PLACES_API = `https://places.geo.${REGION}.amazonaws.com/v2`;
 const ROUTES_API = `https://routes.geo.${REGION}.amazonaws.com/v2`;
 const NEARBY_CATEGORIES = ["shopping_mall", "department_store", "grocery", "library", "museum",
   "civic-community_center", "drugstore_or_pharmacy", "pharmacy", "drugstore", "convenience_store"];
+// Amazon Location categories that match our "refuge" (stay without buying). Groceries, pharmacies and
+// convenience stores are not refuges, so they never trigger the "closer place" note.
+const REFUGE_LIKE = ["shopping_mall", "department_store", "library", "museum", "civic-community_center"];
+const CLOSER_BY_M = 150; // same threshold as the validation in docs/validation.md
+
+// Straight-line distance in meters between two [lon, lat] points
+function metersBetween([lon1, lat1], [lon2, lat2]) {
+  const rad = Math.PI / 180, R = 6371000;
+  const a = Math.sin((lat2 - lat1) * rad / 2) ** 2 +
+            Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin((lon2 - lon1) * rad / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
 const MAX_SEARCHES = 30; // per page visit: a guard against accidental loops eating the free tier
 const DEBUG = params.has("debug"); // ?debug=1 shows how long each call took
 let searchCount = 0;
@@ -517,17 +532,26 @@ async function searchFrom(lngLat, label, { afterGeocode = false } = {}) {
   if (places) drawNearby(places);
   const failed = [iso, route, nearby].some((r) => r.status === "rejected");
   fitTo(points);
-  showResult(resultHtml({ label, refuge, hex, route: routeInfo, nearby: places, note: failed ? t().apiFailed : "" }));
+  showResult(resultHtml({ label, refuge, hex, route: routeInfo, nearby: places, note: failed ? t().apiFailed : "", origin: lngLat }));
   if (DEBUG) console.table(timings);
 }
 
-function resultHtml({ label, refuge, hex, route, nearby, note }) {
+function resultHtml({ label, refuge, hex, route, nearby, note, origin = null }) {
   const p = refuge.properties;
   const lines = [];
   if (label) lines.push(`<p class="pop-kicker">${t().from}: ${escapeHtml(label)}</p>`);
   lines.push(`<p class="muted small">${t().nearestRefuge}</p><p class="result-main">${escapeHtml(p.n)} <span class="muted">· ${t().types[p.t] || p.t}</span></p>`);
   if (route) lines.push(`<p><strong>${t().onFootRoute(Math.round(route.seconds / 60), (route.meters / 1000).toFixed(1))}</strong></p>`);
   lines.push(`<p class="muted">${t().openDataEstimate(t().minutes(hex.ref))}</p>`);
+  // Honest about the gaps in the open data: say so when Amazon Location knows a closer refuge-type place
+  if (nearby && origin) {
+    const ours = metersBetween(origin, refuge.geometry.coordinates);
+    const closer = nearby.find((it) => REFUGE_LIKE.includes(it.Categories?.[0]?.Id) && it.Distance < ours - CLOSER_BY_M);
+    if (closer) {
+      const cat = closer.Categories[0].Id;
+      lines.push(`<p class="note">${t().closerByAmazon(escapeHtml(closer.Title), t().nearbyCats[cat] || cat, Math.round(closer.Distance))}</p>`);
+    }
+  }
   if (note) lines.push(`<p class="note">${note}</p>`);
   if (route) lines.push(`<p class="small">${t().isolinesNote}</p>`);
   if (nearby) {

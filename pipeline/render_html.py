@@ -98,10 +98,10 @@ def panel(s):
         + both("adultos mayores (60+) viven a más de 15 minutos a pie del refugio fresco más cercano.",
                "older adults (60+) live more than a 15-minute walk from the nearest cool refuge.")
         + '</p><p class="hero-sub">'
-        + both(f"Según los datos abiertos de Overture Maps, son el {pct(far, tot60)} de los {num(tot60)} "
+        + both(f"Con lugares de Overture Maps y población de Meta HRSL, son el {pct(far, tot60)} de los {num(tot60)} "
                f"adultos mayores de la ciudad. Si también cuentan las farmacias y tiendas de conveniencia, "
                f"quedan {num(far_any)} ({pct(far_any, tot60)}).",
-               f"According to Overture Maps open data, that is {pct(far, tot60)} of the city's {num(tot60)} "
+               f"With places from Overture Maps and population from Meta HRSL, that is {pct(far, tot60)} of the city's {num(tot60)} "
                f"older adults. Counting pharmacies and convenience stores too, {num(far_any)} "
                f"({pct(far_any, tot60)}) remain that far.")
         + "</p>")
@@ -287,7 +287,7 @@ def about_page(cities, v):
 <h1>Refugio: how far do older adults have to walk in 45 °C heat to reach a cool place?</h1>
 <p class="lede">In Culiacán, Mexico, <strong>{num(far0)} older adults (60+), {pct(far0, tot0)} of the
 {num(tot0)} who live in the city, are more than a 15-minute walk from the nearest air-conditioned place
-where they can stay without buying anything</strong>, according to Overture Maps open data. Refugio maps
+where they can stay without buying anything</strong>, according to open data (places from Overture Maps, population from Meta HRSL). Refugio maps
 that walking time for every block-sized hexagon, shows where cool refuges are missing, ranks the
 existing public buildings that could open as refuges, and gives anyone a live walking route from
 their own address with Amazon Location Service.</p>
@@ -304,7 +304,7 @@ their own address with Amazon Location Service.</p>
                      f"{num(far_any)} ({pct(far_any, t60)})",
                      f'{p["pct60_le10_before"]}% → {p["pct60_le10_after"]}%'])
     out.append(table(["City", "Older adults (60+)", "More than 15 min on foot from a refuge",
-                      "...counting pharmacies and convenience stores too",
+                      "More than 15 min, counting pharmacies and convenience stores too",
                       f"Within 10 min of a refuge: today → with {p0['n']} proposed public buildings"], rows))
     out.append(f"""<p class="note">Walking speed 3.6 km/h, along the real street network. Older adults are
 people aged 60 or more in the Meta/CIESIN High Resolution Settlement Layer, which counts about 30% fewer of them
