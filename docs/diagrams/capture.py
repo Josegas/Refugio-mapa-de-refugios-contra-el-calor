@@ -121,6 +121,7 @@ def main():
 
         print("desktop screenshots")
         page = open_page(browser, 1440, 900)
+        page.wait_for_timeout(2500)  # the first page of a run paints late (cold cache); without this the map came out blank
         page.screenshot(path=str(ASSETS / "k4_hero.png"))
         search(page, DEMO_ADDRESS)
         show_result(page)
