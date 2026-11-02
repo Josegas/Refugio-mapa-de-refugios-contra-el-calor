@@ -68,7 +68,7 @@ in Amazon S3. Only each city's bounding box is read, with HTTP range requests, s
 40 seconds instead of pulling global files.</p>
 
 <h2>How it's put on the map</h2>
-<figure><img src="img/k1_architecture.png" alt="Architecture diagram: a data pipeline reads Overture Maps and Meta HRSL from Amazon S3 and writes static files; GitHub Actions deploys them to AWS Amplify; the browser calls Amazon Location Maps, Places and Routes." loading="lazy"><figcaption>A pipeline that runs once per city, and a static site that calls Amazon Location live. One AWS Region: us-west-2.</figcaption></figure>
+<figure><img src="img/k1_architecture.png" alt="Architecture diagram: a data pipeline reads Overture Maps and Meta HRSL from Amazon S3 and writes static files; GitHub Actions deploys them to AWS Amplify; the browser calls Amazon Location Maps, Places and Routes. The same results also go into an Apache Iceberg table on Amazon S3, queried with Amazon Athena through the AWS Glue Data Catalog." loading="lazy"><figcaption>A pipeline that runs once per city, a static site that calls Amazon Location live, and the results as an Apache Iceberg table for SQL. One AWS Region: us-west-2.</figcaption></figure>
 <ol>
 <li><b>Read from S3.</b> DuckDB queries the Overture GeoParquet files by bounding box; rasterio reads only the
 needed window of the HRSL Cloud-Optimized GeoTIFFs.</li>
@@ -86,6 +86,9 @@ door, at 3.6 km/h, a conservative speed for an older adult in the heat.</li>
 within 10 minutes.</li>
 <li><b>Web.</b> The results are small static files (hexagons, refuges, proposals and statistics) drawn in the
 browser with MapLibre GL JS and h3-js on an Amazon Location base map, and hosted on AWS Amplify.</li>
+<li><b>Analytics.</b> The same results are also an Apache Iceberg table on Amazon S3, registered in the AWS Glue
+Data Catalog and queried in SQL with Amazon Athena. Each city is one commit (snapshot), so earlier versions can
+still be queried. The live map doesn't use it; example queries are in docs/iceberg.md in the repository.</li>
 </ol>
 <h3>Pipeline volumes, per city</h3>
 
@@ -95,9 +98,9 @@ the compute step runs locally.</p>
 
 <h2>AWS services</h2>
 
-<table><thead><tr><th scope="col">Service</th><th scope="col">Used for</th><th scope="col">Why</th></tr></thead><tbody><tr><td>Registry of Open Data on AWS (Amazon S3)</td><td>Overture Maps and Meta HRSL, read by bounding box</td><td>Open, global data in cloud-native formats: the same code works for any Mexican city.</td></tr><tr><td>Amazon Location Service: Maps</td><td>Base map (vector style, API key)</td><td>No tile server to run.</td></tr><tr><td>Amazon Location Service: Places</td><td>Geocode (address search) and SearchNearby (cool places near you)</td><td>Up-to-date commercial places that complement Overture. Used as SingleUse: results are never stored.</td></tr><tr><td>Amazon Location Service: Routes</td><td>CalculateIsolines (5/10/15-minute walk) and CalculateRoutes (walking route)</td><td>Pedestrian routing from the exact address, which can't be precomputed for every home.</td></tr><tr><td>AWS Amplify Hosting</td><td>Static site with CDN and HTTPS</td><td>Deployed by GitHub Actions with OIDC, no stored keys.</td></tr><tr><td>AWS Budgets</td><td>Cost alerts</td><td>Warns by email if the public API key is abused.</td></tr></tbody></table>
-<p>The infrastructure (API keys restricted to this domain, Amplify app, budget and the GitHub deploy
-role) is defined in Terraform. Every push to main runs the tests, a secret scan and Terraform checks before
+<table><thead><tr><th scope="col">Service</th><th scope="col">Used for</th><th scope="col">Why</th></tr></thead><tbody><tr><td>Registry of Open Data on AWS (Amazon S3)</td><td>Overture Maps and Meta HRSL, read by bounding box</td><td>Open, global data in cloud-native formats: the same code works for any Mexican city.</td></tr><tr><td>Amazon Location Service: Maps</td><td>Base map (vector style, API key)</td><td>No tile server to run.</td></tr><tr><td>Amazon Location Service: Places</td><td>Geocode (address search) and SearchNearby (cool places near you)</td><td>Up-to-date commercial places that complement Overture. Used as SingleUse: results are never stored.</td></tr><tr><td>Amazon Location Service: Routes</td><td>CalculateIsolines (5/10/15-minute walk) and CalculateRoutes (walking route)</td><td>Pedestrian routing from the exact address, which can't be precomputed for every home.</td></tr><tr><td>AWS Amplify Hosting</td><td>Static site with CDN and HTTPS</td><td>Deployed by GitHub Actions with OIDC, no stored keys.</td></tr><tr><td>AWS Budgets</td><td>Cost alerts</td><td>Warns by email if the public API key is abused.</td></tr><tr><td>Amazon S3, AWS Glue and Amazon Athena</td><td>The results as an Apache Iceberg table, one snapshot per city</td><td>SQL over the results with no server running; earlier versions stay queryable.</td></tr></tbody></table>
+<p>The infrastructure (API keys restricted to this domain, Amplify app, budget, the GitHub deploy
+role, and the Iceberg bucket, Glue database and Athena workgroup) is defined in Terraform. Every push to main runs the tests, a secret scan and Terraform checks before
 deploying, and an uptime check runs every 3 hours.</p>
 
 <h2>Evidence: is the open-data map right?</h2>

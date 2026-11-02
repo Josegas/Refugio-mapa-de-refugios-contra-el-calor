@@ -33,6 +33,8 @@ WANTED = {  # short name -> file name inside the official package
     "amplify": "Arch_AWS-Amplify_64.svg",
     "budgets": "Arch_AWS-Budgets_64.svg",
     "iam": "Arch_AWS-Identity-and-Access-Management_64.svg",
+    "glue": "Arch_AWS-Glue_64.svg",
+    "athena": "Arch_Amazon-Athena_64.svg",
     "cloud": "AWS-Cloud-logo_32.svg",
     "client": "Res_Client_48_Light.svg",
     "users": "Res_Users_48_Light.svg",
@@ -44,6 +46,7 @@ WANTED = {  # short name -> file name inside the official package
 INK, INK2, MUTED, LINE = "#232f3e", "#4b5563", "#6b7280", "#d5dbdb"
 BLUE, BLUE_LIGHT = "#1c5cab", "#eaf2fc"
 GREEN, RED = "#7aa116", "#dd344c"  # AWS: storage & cost (green), front-end web & mobile / security (red)
+PURPLE = "#8c4fff"  # AWS: analytics
 FONT = "Noto Sans, Arial, Helvetica, sans-serif"
 
 
@@ -133,8 +136,9 @@ def architecture(s):
     out = []
     t, _ = text(40, 52, "Refugio: architecture", 28, 700)
     out.append(t)
-    t, _ = text(40, 82, "A data pipeline that runs once per city, and a static web app that calls Amazon Location "
-                        "Service live. One AWS Region: us-west-2.", 16, 400, INK2)
+    t, _ = text(40, 82, "A data pipeline that runs once per city, a static web app that calls Amazon Location "
+                        "Service live, and the results as an Apache Iceberg table for SQL. One AWS Region: us-west-2.",
+                16, 400, INK2)
     out.append(t)
 
     # The two zones
@@ -246,6 +250,25 @@ def architecture(s):
     out.append(arrow([(1205, 418), (1205, 358)], both=True))
     out.append(text(1222, 394, "HTTPS + API key", 14, 700)[0])
 
+    # C: analytics, the results as an Apache Iceberg table (the live app doesn't use it)
+    out.append(box(30, 905, 1540, 170, stroke="#9aa5b1", fill="#fbfbfa", dash=True, r=12))
+    out.append(text(50, 935, "ANALYTICS (SQL OVER THE RESULTS)", 14, 700, MUTED)[0])
+    out.append(box(60, 955, 1480, 100, stroke=PURPLE, sw=2))
+    parts = [("s3", 80, "Apache Iceberg table on Amazon S3", "Private bucket. One snapshot per city: earlier versions can still be queried."),
+             ("glue", 610, "AWS Glue Data Catalog", "Where the table and its columns are registered."),
+             ("athena", 1040, "Amazon Athena", "SQL with no servers. Queries over 1 GB are cancelled.")]
+    for name, x, title, desc in parts:
+        out.append(icon(name, x, 978, 52))
+        out.append(text(x + 66, 998, title, 17, 700)[0])
+        out.append(text(x + 66, 1021, desc, 13, 400, INK2, width=50)[0])
+    out.append(arrow([(1036, 1004), (1010, 1004)]))  # Athena -> Glue -> S3: the query path
+    out.append(arrow([(606, 1004), (580, 1004)]))
+
+    # 8: the same results into the Iceberg table
+    out.append(arrow([(410, 840), (410, 953)]))
+    out.append(badge(8, 410, 888))
+    out.append(text(436, 893, "pipeline/iceberg.py: one commit per city", 14, 700)[0])
+
     # Legend
     legend = [
         "1  The pipeline reads only each city's bounding box from the open-data buckets on Amazon S3.",
@@ -255,15 +278,17 @@ def architecture(s):
         "5  Amazon Location Maps draws the base map.",
         "6  Places geocodes the person's address and finds cool places nearby.",
         "7  Routes draws the area reachable on foot and the walking route to the nearest refuge.",
+        "8  The same results go into an Apache Iceberg table on Amazon S3, one snapshot (commit) per city.",
+        "9  Amazon Athena answers SQL over that table through the AWS Glue Data Catalog.",
     ]
-    out.append(text(40, 905, "How it flows", 16, 700)[0])
+    out.append(text(40, 1115, "How it flows", 16, 700)[0])
     for i, line in enumerate(legend):
-        col, row = divmod(i, 4)
+        col, row = divmod(i, 5)
         n, desc = line.split("  ", 1)
-        x, y = 40 + col * 790, 932 + row * 26
+        x, y = 40 + col * 790, 1142 + row * 26
         out.append(badge(n, x + 11, y - 5, 11))
         out.append(text(x + 30, y, desc, 13.5, 400, INK2)[0])
-    return svg_doc(1600, 1040, "\n".join(out))
+    return svg_doc(1600, 1280, "\n".join(out))
 
 
 # ----------------------------------------------------------------------------- K2 pipeline funnel

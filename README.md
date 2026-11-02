@@ -36,7 +36,7 @@ data). Across the three cities, 52,542 are.
 
 ## How it works
 
-![Architecture diagram: the pipeline reads Overture Maps and Meta HRSL from Amazon S3 and writes static files; GitHub Actions deploys them to AWS Amplify; the browser calls Amazon Location Maps, Places and Routes](docs/assets/k1_architecture.png)
+![Architecture diagram: the pipeline reads Overture Maps and Meta HRSL from Amazon S3 and writes static files; GitHub Actions deploys them to AWS Amplify; the browser calls Amazon Location Maps, Places and Routes; the same results also go into an Apache Iceberg table on Amazon S3, queried with Amazon Athena](docs/assets/k1_architecture.png)
 
 ```mermaid
 flowchart LR
@@ -47,7 +47,9 @@ flowchart LR
   subgraph P["pipeline/ (Python, build time)"]
     F["fetch.py<br/>DuckDB + rasterio, bounding box only"] --> B["build.py<br/>classify, walking network,<br/>Dijkstra, H3, greedy coverage"]
     B --> R["render_html.py<br/>page text from stats.json"]
+    B --> I["iceberg.py<br/>results as an Apache Iceberg table"]
   end
+  I --> T["Amazon S3 + AWS Glue Data Catalog<br/>queried in SQL with Amazon Athena"]
   O --> F
   H --> F
   R --> W["web/ static files"]
@@ -90,6 +92,7 @@ from open data, so anyone can recompute it. Amazon Location results are used onc
 | Amazon Location Service: Routes | CalculateIsolines and CalculateRoutes (pedestrian) |
 | AWS Amplify Hosting | Static site, CDN and HTTPS |
 | AWS Budgets | Cost alerts |
+| Amazon S3, AWS Glue and Amazon Athena | The results as an Apache Iceberg table (one snapshot per city), queried in SQL |
 
 ## Evidence
 
@@ -101,7 +104,8 @@ from open data, so anyone can recompute it. Amazon Location results are used onc
 | Street network realism | Walking along streets is a median 1.24 times the straight line in Culiacán |
 | Older adults: HRSL vs INEGI 2020 census | HRSL: 7.7% of Culiacán is 60+; census: 10.9%. Counts are probably low; shares hold if the gap is even ([pipeline/census.py](pipeline/census.py)) |
 
-Details: [docs/validation.md](docs/validation.md). Development journal, with every decision and mistake:
+Details: [docs/validation.md](docs/validation.md). The results as an Apache Iceberg table, with example SQL
+queries, a snapshot per city and time travel: [docs/iceberg.md](docs/iceberg.md). Development journal, with every decision and mistake:
 [docs/journal.md](docs/journal.md).
 
 ![Bar chart: share of older adults by walking minutes to the nearest refuge in Culiacán, Hermosillo and Mexicali](docs/assets/k6_bands.png)
@@ -152,6 +156,10 @@ python docs/diagrams/render.py                               # K1-K3 (downloads 
 - `infra/`: Terraform for the Amazon Location API keys (restricted to 5 actions and to the site's domain, expiring
   2027-01-31), the Amplify app, a $5 monthly budget with email alerts, and the IAM role GitHub Actions assumes
   through OIDC. Copy `terraform.tfvars.example` to `terraform.tfvars`, then `terraform -chdir=infra init && terraform -chdir=infra apply`.
+- `infra/analytics.tf`: the results as an Apache Iceberg table on Amazon S3: a private bucket, a Glue database
+  and an Athena workgroup that cancels queries over 1 GB, with query results deleted after 7 days. After
+  `apply`, fill it with `python pipeline/iceberg.py --bucket "$(terraform -chdir=infra output -raw analytics_bucket)"`
+  (needs `requirements-evidence.txt` and AWS credentials; about 26 s and under one cent of Athena queries).
 - `.github/workflows/ci.yml`: tests, a secret scan (gitleaks) and Terraform checks on every pull request.
 - `.github/workflows/deploy.yml`: on every push to `main`, the same checks, then `deploy/deploy.sh` publishes `web/`
   to Amplify and a smoke test checks the live site.
@@ -161,7 +169,7 @@ python docs/diagrams/render.py                               # K1-K3 (downloads 
 
 | Path | What it is |
 |---|---|
-| `pipeline/` | `fetch.py` (download), `build.py` (walking access), `render_html.py` (page text), `evidence.py` (validation), tests |
+| `pipeline/` | `fetch.py` (download), `build.py` (walking access), `render_html.py` (page text), `evidence.py` (validation), `iceberg.py` (Iceberg table), tests |
 | `web/` | The static app (`index.html`, `app.js`, `style.css`), `about.html`, `llms.txt`, and `web/data/` with the generated data |
 | `docs/` | Development journal, validation results, and the scripts and images of the diagrams, charts and screenshots |
 | `infra/` | Terraform |

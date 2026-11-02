@@ -232,7 +232,8 @@ def table(head, rows, cls=""):
 FIGURES = {  # images from docs/assets/ shown on about.html (copied to web/img/ by main())
     "k1_architecture.png": "Architecture diagram: a data pipeline reads Overture Maps and Meta HRSL from Amazon S3 "
                            "and writes static files; GitHub Actions deploys them to AWS Amplify; the browser calls "
-                           "Amazon Location Maps, Places and Routes.",
+                           "Amazon Location Maps, Places and Routes. The same results also go into an Apache Iceberg "
+                           "table on Amazon S3, queried with Amazon Athena through the AWS Glue Data Catalog.",
     "k8_validation_culiacan.png": "Scatter plot of walking minutes, open-data map versus Amazon Location routes, for "
                                   "50 random hexagons: the points sit on the y = x line.",
 }
@@ -388,11 +389,15 @@ door, at 3.6 km/h, a conservative speed for an older adult in the heat.</li>
 within 10 minutes.</li>
 <li><b>Web.</b> The results are small static files (hexagons, refuges, proposals and statistics) drawn in the
 browser with MapLibre GL JS and h3-js on an Amazon Location base map, and hosted on AWS Amplify.</li>
+<li><b>Analytics.</b> The same results are also an Apache Iceberg table on Amazon S3, registered in the AWS Glue
+Data Catalog and queried in SQL with Amazon Athena. Each city is one commit (snapshot), so earlier versions can
+still be queried. The live map doesn't use it; example queries are in docs/iceberg.md in the repository.</li>
 </ol>
 <h3>Pipeline volumes, per city</h3>
 """.replace("DETOUR_RANGE", f"{d['p5']} to {d['p95']}").replace("DETOUR", f"{d['median']}")
-               .replace("FIG_K1", figure("k1_architecture.png", "A pipeline that runs once per city, and a static "
-                                         "site that calls Amazon Location live. One AWS Region: us-west-2.")))
+               .replace("FIG_K1", figure("k1_architecture.png", "A pipeline that runs once per city, a static site "
+                                         "that calls Amazon Location live, and the results as an Apache Iceberg "
+                                         "table for SQL. One AWS Region: us-west-2.")))
     vrows = []
     for s in cities:
         q, n = s["pipeline"], s["network"]
@@ -421,9 +426,11 @@ the compute step runs locally.</p>
          "Pedestrian routing from the exact address, which can't be precomputed for every home."],
         ["AWS Amplify Hosting", "Static site with CDN and HTTPS", "Deployed by GitHub Actions with OIDC, no stored keys."],
         ["AWS Budgets", "Cost alerts", "Warns by email if the public API key is abused."],
+        ["Amazon S3, AWS Glue and Amazon Athena", "The results as an Apache Iceberg table, one snapshot per city",
+         "SQL over the results with no server running; earlier versions stay queryable."],
     ]))
-    out.append(f"""<p>The infrastructure (API keys restricted to this domain, Amplify app, budget and the GitHub deploy
-role) is defined in Terraform. Every push to main runs the tests, a secret scan and Terraform checks before
+    out.append(f"""<p>The infrastructure (API keys restricted to this domain, Amplify app, budget, the GitHub deploy
+role, and the Iceberg bucket, Glue database and Athena workgroup) is defined in Terraform. Every push to main runs the tests, a secret scan and Terraform checks before
 deploying, and an uptime check runs every 3 hours.</p>
 
 <h2>Evidence: is the open-data map right?</h2>
